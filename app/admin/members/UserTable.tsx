@@ -20,9 +20,13 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { MoreHorizontal, Shield, Trash2, UserCog } from "lucide-react";
 import { toggleUserRole, deleteUser } from "@/app/actions/admin";
-import { toast } from "sonner"; // Assuming sonner is available or I can use alert
 
-export function UserTable({ users }: { users: any[] }) {
+
+import { User } from "@prisma/client";
+
+type SafeUser = Pick<User, "id" | "email" | "name" | "nickname" | "role" | "createdAt">;
+
+export function UserTable({ users }: { users: SafeUser[] }) {
     const [loading, setLoading] = useState<string | null>(null);
 
     const handleToggleRole = async (userId: string, currentRole: string) => {

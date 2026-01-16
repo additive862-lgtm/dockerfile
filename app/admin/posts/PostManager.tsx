@@ -12,11 +12,21 @@ import {
     TableHeader,
     TableRow,
 } from "@/app/components/ui/table";
-import { Badge } from "@/app/components/ui/badge"; // Need to install? Wait, I didn't install badge.
-// I'll skip Badge or just use a span for now.
+
 import { MessageSquare, Eye, Calendar, User } from "lucide-react";
 
-export function PostManager({ boardStats, initialPosts }: { boardStats: any[], initialPosts: any[] }) {
+import { Post } from "@prisma/client";
+
+interface BoardStat {
+    category: string;
+    count: number;
+}
+
+type PostWithCount = Post & {
+    _count: { comments: number };
+};
+
+export function PostManager({ boardStats, initialPosts }: { boardStats: BoardStat[], initialPosts: PostWithCount[] }) {
     const [selectedCategory, setSelectedCategory] = useState("all");
 
     const filteredPosts = selectedCategory === "all"

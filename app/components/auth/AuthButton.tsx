@@ -5,10 +5,10 @@ import Link from "next/link";
 import { User, LogOut, Loader2, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { clsx } from 'clsx';
+import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-function cn(...inputs: any[]) {
+function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
@@ -80,7 +80,7 @@ export default function AuthButton() {
                             내 정보
                         </Link>
 
-                        {(session.user as any)?.role === "ADMIN" && (
+                        {session.user?.role === "ADMIN" && (
                             <Link
                                 href="/admin"
                                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors border-b border-slate-50"

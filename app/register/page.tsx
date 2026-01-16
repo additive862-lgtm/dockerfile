@@ -92,7 +92,7 @@ export default function RegisterPage() {
 
     const initializeTurnstile = () => {
         if (window.turnstile && turnstileContainerRef.current && !widgetIdRef.current) {
-            const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+            const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string;
 
             if (!siteKey) {
                 console.error("Turnstile Site Key is missing");
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                         console.log("Turnstile success:", token);
                         setTurnstileToken(token);
                     },
-                    "error-callback": (err: any) => {
+                    "error-callback": (err: unknown) => {
                         console.error("Turnstile error:", err);
                         setTurnstileToken("");
                     },
@@ -254,8 +254,21 @@ export default function RegisterPage() {
 }
 
 // Add global type for turnstile
+interface Turnstile {
+    render: (
+        container: HTMLElement | string,
+        options: {
+            sitekey: string;
+            callback: (token: string) => void;
+            "error-callback"?: (error: unknown) => void;
+            "expired-callback"?: () => void;
+        }
+    ) => string;
+    remove: (widgetId: string) => void;
+}
+
 declare global {
     interface Window {
-        turnstile: any;
+        turnstile?: Turnstile;
     }
 }

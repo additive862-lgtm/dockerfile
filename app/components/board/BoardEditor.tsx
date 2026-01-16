@@ -9,13 +9,17 @@ interface BoardEditorProps {
     onChange: (content: string) => void;
 }
 
+interface FileLoader {
+    file: Promise<File>;
+}
+
 /**
  * Custom Upload Adapter for CKEditor 5
  * Bypasses local resource restrictions by dealing with binary data
  */
 class MyUploadAdapter {
-    loader: any;
-    constructor(loader: any) {
+    loader: FileLoader;
+    constructor(loader: FileLoader) {
         this.loader = loader;
     }
 
@@ -50,7 +54,7 @@ class MyUploadAdapter {
 }
 
 function MyCustomUploadAdapterPlugin(editor: any) {
-    editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader: FileLoader) => {
         return new MyUploadAdapter(loader);
     };
 }
@@ -171,7 +175,7 @@ export function BoardEditor({ content, onChange }: BoardEditorProps) {
                     const viewDocument = editor.editing.view.document;
 
                     // 1. Clean HWP/Word artifacts from the HTML paste
-                    editor.plugins.get('ClipboardPipeline').on('inputTransformation', (evt: any, data: any) => {
+                    editor.plugins.get('ClipboardPipeline').on('inputTransformation', (evt: unknown, data: any) => {
                         let html = data.dataTransfer.getData('text/html');
 
                         if (html) {
@@ -189,7 +193,7 @@ export function BoardEditor({ content, onChange }: BoardEditorProps) {
                     });
 
                     // 2. Binary Image Extraction & Immediate Base64 Insertion
-                    viewDocument.on('paste', (evt: any, data: any) => {
+                    viewDocument.on('paste', (evt: unknown, data: any) => {
                         const clipboardData = data.domEvent.clipboardData;
                         if (!clipboardData) return;
 

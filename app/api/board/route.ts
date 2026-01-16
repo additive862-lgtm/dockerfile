@@ -2,10 +2,24 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
+interface AttachmentInput {
+    fileUrl: string;
+    fileName: string;
+    fileType: 'IMAGE' | 'FILE' | 'LINK'; // Assuming enum values
+}
+
+interface CreatePostRequest {
+    title: string;
+    content: string;
+    author?: string;
+    attachments?: AttachmentInput[];
+    category?: string;
+}
+
 export async function POST(request: Request) {
     try {
         const session = await auth();
-        const body = await request.json();
+        const body = await request.json() as CreatePostRequest;
         const { title, content, author, attachments, category } = body;
 
         const finalAuthor = author || session?.user?.name || 'Anonymous';
@@ -27,7 +41,7 @@ export async function POST(request: Request) {
                 authorId: finalAuthorId,
                 category: category || 'free',
                 attachments: {
-                    create: attachments?.map((att: any) => ({
+                    create: attachments?.map((att: AttachmentInput) => ({
                         fileUrl: att.fileUrl,
                         fileName: att.fileName,
                         fileType: att.fileType, // IMAGE, FILE, LINK

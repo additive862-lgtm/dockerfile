@@ -15,7 +15,9 @@ import {
     CardTitle,
 } from "@/app/components/ui/card";
 
-export default function ProfileForm({ initialUser }: { initialUser: any }) {
+import { type Session } from "next-auth";
+
+export default function ProfileForm({ initialUser }: { initialUser: Session["user"] }) {
     const { update } = useSession();
     const [nickname, setNickname] = useState(initialUser?.nickname || "");
     const [isPending, setIsPending] = useState(false);
