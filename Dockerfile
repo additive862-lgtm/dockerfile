@@ -59,4 +59,7 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+COPY --from=builder /app/prisma ./prisma
+RUN npm install -g prisma
+
+CMD ["/bin/sh", "-c", "npx prisma db push --accept-data-loss && node server.js"]
