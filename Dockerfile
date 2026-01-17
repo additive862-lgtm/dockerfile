@@ -46,6 +46,8 @@ COPY --from=builder /app/public ./public
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
+RUN npm install -g prisma
+
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -59,7 +61,6 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-COPY --from=builder /app/prisma ./prisma
-RUN npm install -g prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 CMD ["/bin/sh", "-c", "npx prisma db push --accept-data-loss && node server.js"]
