@@ -58,6 +58,8 @@ export default function RegisterPage() {
 
     const isPasswordMatch = password.length >= 8 && password === confirmPassword;
 
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
     // Success redirect
     useEffect(() => {
         if (state === "success") {
@@ -65,6 +67,14 @@ export default function RegisterPage() {
             window.location.href = "/login";
         }
     }, [state]);
+
+    // Handle missing Site Key (Fallback for local dev)
+    useEffect(() => {
+        if (!siteKey) {
+            console.warn("Turnstile Site Key is missing. Spam protection disabled.");
+            setTurnstileToken("PASSED_BY_NO_KEY");
+        }
+    }, [siteKey]);
 
     // Cleanup widget on unmount
     useEffect(() => {
@@ -91,14 +101,7 @@ export default function RegisterPage() {
     };
 
     const initializeTurnstile = () => {
-        if (window.turnstile && turnstileContainerRef.current && !widgetIdRef.current) {
-            const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string;
-
-            if (!siteKey) {
-                console.error("Turnstile Site Key is missing");
-                return;
-            }
-
+        if (window.turnstile && turnstileContainerRef.current && !widgetIdRef.current && siteKey) {
             try {
                 const id = window.turnstile.render(turnstileContainerRef.current, {
                     sitekey: siteKey,
@@ -124,11 +127,14 @@ export default function RegisterPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-slate-50 py-10">
-            <Script
-                src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-                onLoad={initializeTurnstile}
-                strategy="afterInteractive"
-            />
+            {siteKey && (
+                <Script
+                    src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                    onLoad={initializeTurnstile}
+                    strategy="afterInteractive"
+                />
+            )}
+
 
             <Card className="w-full max-w-md">
                 <CardHeader>

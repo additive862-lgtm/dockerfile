@@ -126,3 +126,190 @@ export async function getPostsWithComments() {
         }
     });
 }
+
+export async function getBoardSettings() {
+    await checkAdmin();
+    return await prisma.boardSettings.findMany({
+        orderBy: { name: "asc" }
+    });
+}
+
+export async function updateBoardSettings(category: string, data: any) {
+    await checkAdmin();
+
+    const { id, ...updateData } = data;
+
+    await prisma.boardSettings.upsert({
+        where: { category },
+        update: updateData,
+        create: {
+            category,
+            ...updateData,
+        },
+    });
+
+    revalidatePath("/admin/boards");
+    return { success: true };
+}
+
+export async function initializeBoardSettings(boards: { category: string, name: string }[]) {
+    await checkAdmin();
+
+    for (const board of boards) {
+        await prisma.boardSettings.upsert({
+            where: { category: board.category },
+            update: {},
+            create: {
+                category: board.category,
+                name: board.name,
+            },
+        });
+    }
+
+    revalidatePath("/admin/boards");
+    return { success: true };
+}
+
+export async function deleteBoard(category: string) {
+    await checkAdmin();
+
+    // The Posts and Comments should be deleted by DB Cascade if configured, 
+    // but Prisma also handles this if the schema is correct.
+    await prisma.boardSettings.delete({
+        where: { category }
+    });
+
+    // We also need to delete posts manually if not cascaded (Prisma does cascade if onDelete: Cascade is in schema)
+    // BoardSettings doesn't have a direct relation to Post in schema, 
+    // so we must delete posts matching this category string.
+    await prisma.post.deleteMany({
+        where: { category }
+    });
+
+    revalidatePath("/admin/boards");
+    return { success: true };
+}
+
+// Menu Actions
+export async function getMenus() {
+    await checkAdmin();
+    return await prisma.navigationMenu.findMany({
+        orderBy: { order: "asc" },
+        include: {
+            subMenus: {
+                orderBy: { order: "asc" }
+            }
+        },
+        where: { parentId: null } // Get top-level menus first
+    });
+}
+
+export async function updateMenu(id: number | null, data: any) {
+    await checkAdmin();
+
+    const { id: _, subMenus, ...cleanData } = data;
+
+    if (id) {
+        await prisma.navigationMenu.update({
+            where: { id },
+            data: cleanData
+        });
+    } else {
+        await prisma.navigationMenu.create({
+            data: cleanData
+        });
+    }
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin/menus");
+    return { success: true };
+}
+
+export async function deleteMenu(id: number) {
+    await checkAdmin();
+    await prisma.navigationMenu.delete({
+        where: { id }
+    });
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin/menus");
+    return { success: true };
+}
+
+export async function reorderMenus(items: { id: number, order: number }[]) {
+    await checkAdmin();
+
+    await Promise.all(items.map(item =>
+        prisma.navigationMenu.update({
+            where: { id: item.id },
+            data: { order: item.order }
+        })
+    ));
+
+    revalidatePath("/", "layout");
+    return { success: true };
+}
+
+export async function seedDefaultMenus() {
+    await checkAdmin();
+
+    // Check if menus already exist
+    const count = await prisma.navigationMenu.count();
+    if (count > 0) return { error: "이미 메뉴가 존재합니다." };
+
+    const defaultStructure = [
+        { name: '두돌소개', path: '/about', order: 0 },
+        { name: '교회사', path: '/board/church', order: 1 },
+        {
+            name: '강론',
+            order: 2,
+            subMenus: [
+                { name: '오늘의 강론', path: '/board/daily-homily', order: 0 },
+                { name: '주일/대축일 강론', path: '/board/sunday-homily', order: 1 },
+                { name: '축일/기념일 강론', path: '/board/feast-homily', order: 2 },
+                { name: '특별강론', path: '/board/special-homily', order: 3 },
+            ]
+        },
+        {
+            name: '맘도성경여행',
+            order: 3,
+            subMenus: [
+                { name: '맘도 성서 해설', path: '/board/mamdo-commentary', order: 0 },
+                { name: '성경', path: '/board/bible', order: 1 },
+            ]
+        },
+        { name: '이야기 샘', path: '/board/story-spring', order: 4 },
+        {
+            name: '커뮤니티',
+            order: 5,
+            subMenus: [
+                { name: '자유게시판', path: '/board/free-board', order: 0 },
+                { name: '갤러리', path: '/board/gallery', order: 1 },
+                { name: '질문과 답변', path: '/board/qna', order: 2 },
+            ]
+        },
+    ];
+
+    for (const item of defaultStructure) {
+        const { subMenus, ...parentData } = item;
+        const parent = await prisma.navigationMenu.create({
+            data: parentData
+        });
+
+        if (subMenus) {
+            for (const sub of subMenus) {
+                await prisma.navigationMenu.create({
+                    data: {
+                        ...sub,
+                        parentId: parent.id
+                    }
+                });
+            }
+        }
+    }
+
+    revalidatePath("/", "layout");
+    return { success: true };
+}
+
+

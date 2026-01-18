@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/layout/Navbar";
+import { getPublicMenus } from "@/app/actions/menu";
 import VisitorTracker from "@/app/components/common/VisitorTracker";
 import VisitorCounterDisplay from "@/app/components/common/VisitorCounterDisplay";
 import Providers from "@/app/components/providers/Providers";
@@ -15,11 +16,13 @@ export const metadata: Metadata = {
   description: "이석재 토마스 데 아퀴나스 신부와 함께하는 깊이 있는 성경 묵상과 교회사 여행",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const menus = await getPublicMenus();
+
   return (
     <html lang="ko">
       {/* Changed bg-slate-50 to bg-[#fcfcfc] for a cleaner, warmer white. Text is slate-900 for high contrast. */}
@@ -27,7 +30,7 @@ export default function RootLayout({
         <Providers>
           <VisitorTracker />
           {/* Navigation */}
-          <Navbar />
+          <Navbar initialMenus={menus} />
 
           {/* Main Content */}
           <main className="flex-grow">

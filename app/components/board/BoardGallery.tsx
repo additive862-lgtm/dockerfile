@@ -8,6 +8,7 @@ interface BoardPost {
     id: number;
     title: string;
     author: string | null;
+    thumbnail?: string | null;
     createdAt: Date;
     attachments: { fileUrl: string; fileType: string }[];
     _count: {
@@ -15,7 +16,7 @@ interface BoardPost {
     };
 }
 
-export function BoardGallery({ posts, category }: { posts: BoardPost[], category: string }) {
+export function BoardGallery({ posts, category }: { posts: any[], category: string }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {posts.length === 0 ? (
@@ -24,7 +25,7 @@ export function BoardGallery({ posts, category }: { posts: BoardPost[], category
                 </div>
             ) : (
                 posts.map((post) => {
-                    const thumbnail = post.attachments.find(a => a.fileType === 'IMAGE')?.fileUrl || '/placeholder-img.png';
+                    const thumbnail = post.thumbnail || post.attachments.find((a: any) => a.fileType === 'IMAGE')?.fileUrl || '/placeholder-img.png';
 
                     return (
                         <Link

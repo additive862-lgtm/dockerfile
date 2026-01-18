@@ -16,6 +16,7 @@ import {
 import { MessageSquare, Eye, Calendar, User } from "lucide-react";
 
 import { Post } from "@prisma/client";
+import { getCategoryDisplayName } from "@/lib/board-utils";
 
 interface BoardStat {
     category: string;
@@ -26,8 +27,29 @@ type PostWithCount = Post & {
     _count: { comments: number };
 };
 
-export function PostManager({ boardStats, initialPosts }: { boardStats: BoardStat[], initialPosts: PostWithCount[] }) {
+export function PostManager({ boardStats, initialPosts, allSettings }: { boardStats: BoardStat[], initialPosts: PostWithCount[], allSettings?: any[] }) {
     const [selectedCategory, setSelectedCategory] = useState("all");
+
+    // Dynamic display map from CMS settings
+    const dynamicMap: Record<string, string> = {};
+    if (allSettings) {
+        allSettings.forEach(board => {
+            // Map the main board
+            dynamicMap[board.category] = board.name;
+            // Map sub-categories
+            if (board.categories) {
+                board.categories.forEach((c: string) => {
+                    const [name, key] = c.split(':');
+                    dynamicMap[key || name] = name;
+                });
+            }
+        });
+    }
+
+    const getDisplayName = (cat: string) => {
+        return dynamicMap[cat] || getCategoryDisplayName(cat);
+    };
+
 
     const filteredPosts = selectedCategory === "all"
         ? initialPosts
@@ -52,7 +74,7 @@ export function PostManager({ boardStats, initialPosts }: { boardStats: BoardSta
                                         value={board.category}
                                         className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                                     >
-                                        {board.category} ({board.count})
+                                        {getDisplayName(board.category)} ({board.count})
                                     </TabsTrigger>
                                 ))}
                             </TabsList>
@@ -119,7 +141,7 @@ export function PostManager({ boardStats, initialPosts }: { boardStats: BoardSta
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-xs bg-slate-100 px-2 py-0.5 rounded">
-                                                {post.category}
+                                                {getDisplayName(post.category)}
                                             </span>
                                         </TableCell>
                                         <TableCell>

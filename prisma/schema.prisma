@@ -25,6 +25,12 @@ enum AttachmentType {
   LINK
 }
 
+enum LayoutType {
+  LIST
+  CARD
+  GALLERY
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -54,6 +60,7 @@ model Post {
   author      String?
   authorId    String?
   category    String       @default("free")
+  thumbnail   String?
   views       Int          @default(0)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -74,10 +81,54 @@ model Comment {
 }
 
 model Attachment {
-  id        Int            @id @default(autoincrement())
-  fileUrl   String
-  fileName  String
-  fileType  AttachmentType
-  post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
+  id          Int            @id @default(autoincrement())
+  fileUrl     String
+  fileName    String
+  fileType    AttachmentType
+  isEmbedded  Boolean        @default(false)
+  post        Post?          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId      Int?
+  deletedAt   DateTime?      // For soft delete
+  createdAt   DateTime       @default(now())
 }
+
+model BoardSettings {
+  id                  Int      @id @default(autoincrement())
+  category            String   @unique // The unique key for the board (slug)
+  name                String   // Display name
+  layoutType          LayoutType @default(LIST)
+  commentEnabled      Boolean  @default(true)
+  secretPostEnabled   Boolean  @default(false)
+  noticeEnabled       Boolean  @default(true)
+  categories          String[] @default([]) // Tag management
+  writePermission     String   @default("USER") // GUEST, USER, ADMIN
+  commentPermission   String   @default("USER")
+  attachPermission    String   @default("USER")
+  maxAttachmentCount  Int      @default(5)
+  maxAttachmentSize   Int      @default(10) // 10MB
+  postsPerPage        Int      @default(10)
+  totalSizeLimit      Int      @default(50) // 50MB
+  searchFilter        String   @default("title_content")
+  sortOrder           String   @default("latest")
+  turnstileEnabled    Boolean  @default(false)
+  mediaEnabled        Boolean  @default(true)      // Image attachment toggle
+  defaultImageAlign   String   @default("center")  // left, center, right
+  defaultImageSize    String   @default("full")    // original, full
+  forbiddenWords      String[] @default([])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model NavigationMenu {
+  id        Int              @id @default(autoincrement())
+  name      String
+  path      String?          // e.g., /board/free-board or https://google.com
+  icon      String?          // Lucide icon name
+  order     Int              @default(0)
+  parentId  Int?
+  parent    NavigationMenu?  @relation("SubMenus", fields: [parentId], references: [id], onDelete: Cascade)
+  subMenus  NavigationMenu[] @relation("SubMenus")
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+

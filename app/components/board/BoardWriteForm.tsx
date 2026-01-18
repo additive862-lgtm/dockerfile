@@ -5,8 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { Paperclip, Plus, X, Globe, Save, RotateCcw } from 'lucide-react';
+import { getMappedCategory, TAB_CONFIG } from '@/lib/board-utils';
+import { BoardTabs } from './BoardTabs';
 
-const BoardEditor = dynamic(() => import('./BoardEditor').then(mod => mod.BoardEditor), {
+// ... (other imports)
+
+const BoardEditor = dynamic(() => import('./BoardEditorWithQueue').then(mod => mod.BoardEditorWithQueue), {
     ssr: false,
     loading: () => <div className="min-h-[500px] bg-slate-50 animate-pulse rounded-[2rem]" />
 });
@@ -15,6 +19,7 @@ interface FileAttachment {
     fileUrl: string;
     fileName: string;
     fileType: 'IMAGE' | 'FILE';
+    isEmbedded?: boolean;
 }
 
 interface ExternalLink {
@@ -23,31 +28,89 @@ interface ExternalLink {
     fileType: 'LINK';
 }
 
-export function BoardWriteForm({ category }: { category: string }) {
+interface BoardSettings {
+    mediaEnabled: boolean;
+    defaultImageAlign: string;
+    defaultImageSize: string;
+    maxAttachmentCount: number;
+    maxAttachmentSize: number;
+    [key: string]: any;
+}
+
+interface BoardWriteFormProps {
+    category: string;
+    initialTab?: string;
+    settings: BoardSettings;
+    editId?: number;
+    initialData?: any;
+}
+
+export function BoardWriteForm({ category, initialTab, settings, editId, initialData }: BoardWriteFormProps) {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const [title, setTitle] = useState('');
-    const [author, setAuthor] = useState('');
-    const [content, setContent] = useState('');
-    const [attachments, setAttachments] = useState<FileAttachment[]>([]);
-    const [links, setLinks] = useState<ExternalLink[]>([]);
+
+    // Determine available tabs for this category
+    let availableTabs = TAB_CONFIG[category];
+
+    if (settings && settings.categories && settings.categories.length > 0) {
+        availableTabs = settings.categories.map((c: string) => {
+            const [name, key] = c.split(':');
+            return { name, key: key || name };
+        });
+    }
+
+    // State for selected tab
+    const [selectedTab, setSelectedTab] = useState(() => {
+        if (initialData?.category) {
+            // Find which tab key maps to this DB category
+            const foundTab = availableTabs?.find(tab => {
+                const mapped = getMappedCategory(category, tab.key, settings);
+                return Array.isArray(mapped) ? mapped.includes(initialData.category) : mapped === initialData.category;
+            });
+            if (foundTab) return foundTab.key;
+        }
+        return initialTab || availableTabs?.[0]?.key || '';
+    });
+
+
+    const [title, setTitle] = useState(initialData?.title || '');
+    const [author, setAuthor] = useState(initialData?.author || '');
+    const [content, setContent] = useState(initialData?.content || '');
+    const [thumbnail, setThumbnail] = useState<string | null>(initialData?.thumbnail || null);
+    const [attachments, setAttachments] = useState<FileAttachment[]>(() => {
+        // Only include non-embedded files and non-links
+        return initialData?.attachments?.filter((a: any) => !a.isEmbedded && a.fileType !== 'LINK') || [];
+    });
+    const [editorAttachments, setEditorAttachments] = useState<any[]>([]);
+    const [links, setLinks] = useState<ExternalLink[]>(() => {
+        return initialData?.attachments?.filter((a: any) => a.fileType === 'LINK') || [];
+    });
     const [linkUrl, setLinkUrl] = useState('');
     const [linkName, setLinkName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (session?.user?.name) {
+        if (!editId && session?.user?.name) {
             setAuthor(session.user.name);
-        } else if (status === 'unauthenticated') {
+        } else if (status === 'unauthenticated' && !editId) {
             setAuthor('');
         }
-    }, [session, status]);
+    }, [session, status, editId]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
 
         for (const file of Array.from(files)) {
+            // Duplicate check
+            if (attachments.some(a => a.fileName === file.name)) {
+                continue;
+            }
+
+            if (settings?.maxAttachmentCount && attachments.length >= settings.maxAttachmentCount) {
+                alert(`최대 ${settings.maxAttachmentCount}개까지만 첨부할 수 있습니다.`);
+                break;
+            }
             const formData = new FormData();
             formData.append('file', file);
 
@@ -96,22 +159,48 @@ export function BoardWriteForm({ category }: { category: string }) {
             return;
         }
 
+        if (settings?.maxAttachmentCount && editorAttachments.length > settings.maxAttachmentCount) {
+            alert(`이미지 개수가 ${settings.maxAttachmentCount}개를 초과하였습니다.`);
+            return;
+        }
+
         setIsSubmitting(true);
+
+        const dbCategory = getMappedCategory(category, selectedTab, settings);
+
         try {
             const res = await fetch('/api/board', {
-                method: 'POST',
+                method: editId ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    id: editId,
                     title,
                     author,
                     content,
-                    category,
-                    attachments: [...attachments, ...links],
+                    thumbnail,
+                    category: dbCategory,
+                    attachments: [
+                        ...attachments.map(a => ({ ...a, isEmbedded: false })),
+                        ...links.map(l => ({ ...l, isEmbedded: false })),
+                        ...editorAttachments.map(a => ({
+                            fileUrl: a.url,
+                            fileName: a.name,
+                            fileType: 'IMAGE',
+                            isEmbedded: true
+                        }))
+                    ],
                 }),
             });
 
             if (res.ok) {
-                router.push(`/board/${category}`);
+                if (editId) {
+                    router.push(`/board/${category}/${editId}`);
+                } else {
+                    const redirectUrl = selectedTab
+                        ? `/board/${category}?tab=${selectedTab}`
+                        : `/board/${category}`;
+                    router.push(redirectUrl);
+                }
                 router.refresh();
             } else {
                 throw new Error('Failed to save post');
@@ -124,10 +213,36 @@ export function BoardWriteForm({ category }: { category: string }) {
         }
     };
 
+    // ... JSX return
     return (
         <form onSubmit={handleSubmit} className="space-y-10">
+            {/* Category Selection (Only if tabs exist) */}
+            {availableTabs && (
+                <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 ml-1">카테고리 선택</label>
+                    <div className="flex gap-4">
+                        {availableTabs.map((tab) => (
+                            <label key={tab.key} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="categoryTab"
+                                    value={tab.key}
+                                    checked={selectedTab === tab.key}
+                                    onChange={(e) => setSelectedTab(e.target.value)}
+                                    className="w-4 h-4 text-[#001f3f] border-slate-300 focus:ring-[#001f3f]"
+                                />
+                                <span className={`text-lg font-bold ${selectedTab === tab.key ? 'text-[#001f3f]' : 'text-slate-500'}`}>
+                                    {tab.name}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Title & Author */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
                 <div className="md:col-span-3 space-y-2">
                     <label className="text-sm font-bold text-slate-700 ml-1">제목</label>
                     <input
@@ -156,7 +271,72 @@ export function BoardWriteForm({ category }: { category: string }) {
             {/* Editor */}
             <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 ml-1">본문</label>
-                <BoardEditor content={content} onChange={setContent} />
+                <BoardEditor
+                    content={content}
+                    onChange={setContent}
+                    settings={settings}
+                    onAttachmentsChange={(items: any[]) => setEditorAttachments(items)}
+                    initialAttachments={initialData?.attachments?.filter((a: any) => a.fileType === 'IMAGE') || []}
+                />
+            </div>
+
+            {/* Representative Image (Thumbnail) */}
+            <div className="space-y-4 pt-4">
+                <label className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-2">
+                    <Paperclip size={18} />
+                    대표 이미지 (카드형/갤러리형 노출)
+                </label>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div
+                        onClick={() => document.getElementById('thumb-upload')?.click()}
+                        className="w-full md:w-64 aspect-[16/10] bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all overflow-hidden relative group"
+                    >
+                        {thumbnail ? (
+                            <>
+                                <img src={thumbnail} className="w-full h-full object-cover" alt="Thumbnail Preview" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <span className="text-white text-xs font-bold">이미지 변경</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <Plus size={32} className="text-slate-300 mb-2" />
+                                <span className="text-xs text-slate-400 font-bold">대표 이미지 업로드</span>
+                            </>
+                        )}
+                    </div>
+                    {thumbnail && (
+                        <button
+                            type="button"
+                            onClick={() => setThumbnail(null)}
+                            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1"
+                        >
+                            <X size={14} /> 대표 이미지 삭제
+                        </button>
+                    )}
+                    <input
+                        id="thumb-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                            const data = await res.json();
+                            if (data.url) setThumbnail(data.url);
+                        }}
+                    />
+                    <div className="flex-1 space-y-2">
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                            • 카드형이나 갤러리형 레이아웃 선택 시 메인 목록에 노출될 썸네일입니다.<br />
+                            • 등록하지 않을 경우 본문의 첫 번째 이미지가 자동으로 사용됩니다.<br />
+                            • 권장 해상도: 800x500 (16:10 비율)
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Files & Links Section */}
@@ -271,7 +451,7 @@ export function BoardWriteForm({ category }: { category: string }) {
                     className="flex items-center gap-2 px-10 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 disabled:bg-slate-300 transition-all font-bold shadow-xl shadow-slate-200"
                 >
                     <Save size={20} />
-                    {isSubmitting ? '저장 중...' : '게시글 등록'}
+                    {isSubmitting ? '저장 중...' : (editId ? '수정 완료' : '게시글 등록')}
                 </button>
             </div>
         </form>

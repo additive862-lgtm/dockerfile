@@ -85,3 +85,14 @@ body {
     color: hsl(var(--foreground));
   }
 }
+
+/* TipTap Video Embeds */
+.prose iframe {
+  width: 100% !important;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto !important;
+  border-radius: 1rem;
+  margin: 2rem 0;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}

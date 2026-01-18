@@ -1,4 +1,4 @@
-import { getBoardPostDetail, getAdjacentPosts } from '@/lib/actions/board';
+import { getBoardPostDetail, getAdjacentPosts, getBoardSettingsByCategory } from '@/lib/actions/board';
 import { AttachmentList } from '../../../components/board/BoardComponents';
 import { CommentSection } from '../../../components/board/CommentSection';
 import { SafeHtml } from '../../../components/board/SafeHtml';
@@ -7,6 +7,10 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { User, Calendar, Eye, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { getMappedCategory, isValidCategoryForRoute, getCategoryDisplayName } from '@/lib/board-utils';
+import { PostActions } from '../../../components/board/PostActions';
+import { PostTopActions } from '../../../components/board/PostTopActions';
+import { auth } from '@/auth';
 
 interface PageProps {
     params: { category: string, id: string };
@@ -15,23 +19,39 @@ interface PageProps {
 export default async function BoardDetailPage({ params }: PageProps) {
     const { category, id: rawId } = params;
     const id = parseInt(rawId);
-    const post = await getBoardPostDetail(id);
+    if (isNaN(id)) notFound();
 
-    if (!post || post.category !== category) {
+    const [post, settings, session] = await Promise.all([
+        getBoardPostDetail(id),
+        getBoardSettingsByCategory(category),
+        auth()
+    ]);
+
+    // Validate if the post belongs to the current route category
+    if (!post || !isValidCategoryForRoute(category, post.category, settings)) {
         notFound();
     }
 
-    const { prev, next } = await getAdjacentPosts(id, category);
+    // Get adjacent posts within the same scope (all mapped sub-categories)
+    const dbCategoryScope = getMappedCategory(category, 'all', settings);
+    const { prev, next } = await getAdjacentPosts(id, dbCategoryScope);
 
     return (
         <div className="bg-white min-h-screen">
             {/* Header / Navigation */}
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100">
-                <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
+                <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
                     <Link href={`/board/${category}`} className="flex items-center gap-2 text-slate-500 hover:text-[#001f3f] transition-colors font-bold text-sm">
                         <ArrowLeft size={18} />
                         <span>목록으로 돌아가기</span>
                     </Link>
+
+                    <PostTopActions
+                        postId={post.id}
+                        category={category}
+                        isOwner={session?.user?.id === post.authorId}
+                        isAdmin={session?.user?.role === 'ADMIN'}
+                    />
                 </div>
             </div>
 
@@ -39,6 +59,11 @@ export default async function BoardDetailPage({ params }: PageProps) {
                 <article className="space-y-8">
                     {/* Post Meta */}
                     <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-[#001f3f]/10 text-[#001f3f] text-sm font-bold rounded-lg">
+                                {getCategoryDisplayName(post.category, settings)}
+                            </span>
+                        </div>
                         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#001f3f] leading-tight">
                             {post.title}
                         </h1>
@@ -93,6 +118,14 @@ export default async function BoardDetailPage({ params }: PageProps) {
                             </Link>
                         )}
                     </div>
+
+                    {/* Actions (Edit/Delete/List) */}
+                    <PostActions
+                        postId={post.id}
+                        category={category}
+                        isOwner={session?.user?.id === post.authorId}
+                        isAdmin={session?.user?.role === 'ADMIN'}
+                    />
 
                     <div className="h-px bg-slate-100" />
 

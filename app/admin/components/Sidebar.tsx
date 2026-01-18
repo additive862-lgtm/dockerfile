@@ -10,6 +10,8 @@ import {
     Settings,
     ChevronLeft,
     Menu,
+    LayoutGrid,
+    ListTodo,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { useState } from "react";
@@ -17,6 +19,8 @@ import { useState } from "react";
 const menuItems = [
     { name: "홈/통계", href: "/admin", icon: LayoutDashboard },
     { name: "회원 관리", href: "/admin/members", icon: Users },
+    { name: "메뉴 관리", href: "/admin/menus", icon: ListTodo },
+    { name: "게시판 관리", href: "/admin/boards", icon: LayoutGrid },
     { name: "게시글 관리", href: "/admin/posts", icon: FileText },
     { name: "시스템 설정", href: "/admin/settings", icon: Settings },
 ];

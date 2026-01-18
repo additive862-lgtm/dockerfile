@@ -27,11 +27,11 @@ interface NavItem {
     dropdown?: NavSubItem[];
 }
 
-const NAV_MENU: NavItem[] = [
+const FALLBACK_MENU: NavItem[] = [
     { name: '두돌소개', path: '/about', icon: <House size={18} /> },
-    { name: '교회사', path: '/board/church-history', icon: <Clock size={18} /> },
+    { name: '교회사', path: '/board/church', icon: <Clock size={18} /> },
     {
-        name: '매일의 강론',
+        name: '강론',
         icon: <BookOpen size={18} />,
         dropdown: [
             { name: '오늘의 강론', path: '/board/daily-homily' },
@@ -40,10 +40,18 @@ const NAV_MENU: NavItem[] = [
             { name: '특별강론', path: '/board/special-homily' },
         ],
     },
-    { name: '두돌성경 50주', path: '/board/bible-50', icon: <BookOpen size={18} /> },
+    {
+        name: '맘도성경여행',
+        icon: <BookOpen size={18} />,
+        dropdown: [
+            { name: '맘도 성서 해설', path: '/board/mamdo-commentary' },
+            { name: '성경', path: '/board/bible' },
+        ],
+    },
+    { name: '이야기 샘', path: '/board/story-spring', icon: <MessageSquare size={18} /> },
     {
         name: '커뮤니티',
-        icon: <MessageSquare size={18} />,
+        icon: <Users size={18} />,
         dropdown: [
             { name: '자유게시판', path: '/board/free-board' },
             { name: '갤러리', path: '/board/gallery' },
@@ -52,10 +60,25 @@ const NAV_MENU: NavItem[] = [
     },
 ];
 
-export default function Navbar() {
+export default function Navbar({ initialMenus }: { initialMenus?: any[] }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const pathname = usePathname();
+
+    // Map DB menus to NavItem structure
+    const mappedMenus: NavItem[] = initialMenus && initialMenus.length > 0
+        ? initialMenus.map(m => ({
+            name: m.name,
+            path: m.path || undefined,
+            icon: <BookOpen size={18} />, // Default icon for all for now, can be improved
+            dropdown: m.subMenus && m.subMenus.length > 0
+                ? m.subMenus.map((sm: any) => ({ name: sm.name, path: sm.path || "" }))
+                : undefined
+        }))
+        : FALLBACK_MENU;
+
+    const navMenus = mappedMenus;
+
 
     /** 2. 인터랙션 및 애니메이션 (Framer Motion) */
     const desktopDropdownVariants = {
@@ -86,7 +109,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-4 ml-auto">
                         {/* Desktop Nav */}
                         <nav className="hidden lg:flex items-center space-x-2">
-                            {NAV_MENU.map((item) => {
+                            {navMenus.map((item) => {
                                 const isActive = item.path === pathname ||
                                     (item.dropdown?.some(sub => sub.path === pathname));
 
@@ -210,7 +233,7 @@ export default function Navbar() {
                                 </div>
 
                                 <div className="space-y-6">
-                                    {NAV_MENU.map((item) => (
+                                    {navMenus.map((item) => (
                                         <div key={item.name} className="space-y-3">
                                             {item.path ? (
                                                 <Link

@@ -1,24 +1,30 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { getCategoryDisplayName, TAB_CONFIG } from '@/lib/board-utils';
 
 interface BoardPost {
     id: number;
     title: string;
     author: string | null;
+    category: string;
     createdAt: Date;
     _count: {
         comments: number;
     };
 }
 
-export function BoardTable({ posts, totalCount, currentPage, pageSize, category }: { posts: BoardPost[], totalCount: number, currentPage: number, pageSize: number, category: string }) {
+export function BoardTable({ posts, totalCount, currentPage, pageSize, category, settings }: { posts: BoardPost[], totalCount: number, currentPage: number, pageSize: number, category: string, settings?: any }) {
+    const hasCategories = (settings?.categories?.length > 0) || !!TAB_CONFIG[category];
+
+
     return (
         <div className="w-full overflow-x-auto">
             <table className="w-full border-collapse text-sm text-left">
                 <thead>
                     <tr className="border-y border-slate-200 bg-slate-50 font-semibold text-slate-700">
                         <th className="px-4 py-3 w-16 text-center">No</th>
+                        {hasCategories && <th className="px-4 py-3 w-28 text-center">구분</th>}
                         <th className="px-4 py-3">제목</th>
                         <th className="px-4 py-3 w-32 text-center">작성자</th>
                         <th className="px-4 py-3 w-32 text-center">등록일</th>
@@ -27,7 +33,7 @@ export function BoardTable({ posts, totalCount, currentPage, pageSize, category 
                 <tbody className="divide-y divide-slate-100">
                     {posts.length === 0 ? (
                         <tr>
-                            <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
+                            <td colSpan={hasCategories ? 5 : 4} className="px-4 py-10 text-center text-slate-500">
                                 등록된 게시글이 없습니다.
                             </td>
                         </tr>
@@ -37,6 +43,13 @@ export function BoardTable({ posts, totalCount, currentPage, pageSize, category 
                                 <td className="px-4 py-4 text-center text-slate-500 font-medium">
                                     {totalCount - (currentPage - 1) * pageSize - index}
                                 </td>
+                                {hasCategories && (
+                                    <td className="px-4 py-4 text-center text-slate-500">
+                                        <span className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600">
+                                            {getCategoryDisplayName(post.category, settings)}
+                                        </span>
+                                    </td>
+                                )}
                                 <td className="px-4 py-4">
                                     <Link href={`/board/${category}/${post.id}`} className="flex items-center gap-2 hover:underline decoration-slate-300 underline-offset-4">
                                         <span className="text-slate-900 font-semibold truncate max-w-[200px] sm:max-w-md">
@@ -129,15 +142,16 @@ interface Attachment {
 }
 
 export function AttachmentList({ attachments }: { attachments: Attachment[] }) {
-    if (attachments.length === 0) return null;
+    const visibleAttachments = attachments.filter(a => !(a as any).isEmbedded);
+    if (visibleAttachments.length === 0) return null;
 
     return (
         <div className="mt-12 p-6 bg-slate-50 rounded-2xl border border-slate-100">
             <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                첨부파일 & 링크 <span className="text-slate-400 font-normal">({attachments.length})</span>
+                첨부파일 & 링크 <span className="text-slate-400 font-normal">({visibleAttachments.length})</span>
             </h3>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {attachments.map((att) => (
+                {visibleAttachments.map((att) => (
                     <li key={att.id} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-slate-400 transition-all group">
                         <div className="text-slate-400">
                             {att.fileType === 'IMAGE' && <ImageIcon size={20} />}

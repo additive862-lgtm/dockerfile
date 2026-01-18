@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createComment } from '@/lib/actions/board';
+import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { MessageSquare, User } from 'lucide-react';
@@ -14,19 +15,33 @@ interface Comment {
 }
 
 export function CommentSection({ postId, initialComments }: { postId: number, initialComments: Comment[] }) {
+    const { data: session, status } = useSession();
     const [author, setAuthor] = useState('');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    useEffect(() => {
+        if (session?.user?.name) {
+            setAuthor(session.user.name);
+        } else if (status === 'unauthenticated') {
+            setAuthor('');
+        }
+    }, [session, status]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!author || !content) return;
+        const finalAuthor = session?.user?.name || author;
+        if (!finalAuthor || !content) {
+            if (!finalAuthor) alert('작성자 이름을 입력해주세요.');
+            return;
+        }
 
         setIsSubmitting(true);
-        const result = await createComment(postId, author, content);
+        const result = await createComment(postId, finalAuthor, content, session?.user?.id);
         if (result.success) {
-            setAuthor('');
             setContent('');
+            // Non-logged in users might want to keep the name for next comment, 
+            // but for security/UX simplicity, we'll keep the author state as is (it's managed by useEffect for logged in anyway)
         } else {
             alert(result.error);
         }
@@ -68,16 +83,24 @@ export function CommentSection({ postId, initialComments }: { postId: number, in
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4">
-                <div className="flex gap-4">
-                    <input
-                        type="text"
-                        placeholder="작성자"
-                        value={author}
-                        onChange={(e) => setAuthor(e.target.value)}
-                        className="w-40 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium"
-                        required
-                    />
-                </div>
+                {status !== 'authenticated' && (
+                    <div className="flex gap-4">
+                        <input
+                            type="text"
+                            placeholder="작성자"
+                            value={author}
+                            onChange={(e) => setAuthor(e.target.value)}
+                            className="w-40 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium"
+                            required
+                        />
+                    </div>
+                )}
+                {status === 'authenticated' && (
+                    <div className="flex items-center gap-2 px-1 text-slate-500 text-sm font-bold">
+                        <User size={14} />
+                        <span>{session?.user?.name} 님으로 댓글을 남깁니다.</span>
+                    </div>
+                )}
                 <div className="relative">
                     <textarea
                         placeholder="댓글을 입력하세요..."
