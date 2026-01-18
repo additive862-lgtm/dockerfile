@@ -34,6 +34,9 @@ interface BoardSettings {
     searchFilter: string;
     sortOrder: string;
     turnstileEnabled: boolean;
+    mediaEnabled: boolean;
+    defaultImageAlign: 'left' | 'center' | 'right';
+    defaultImageSize: 'original' | 'full';
     forbiddenWords: string[];
 }
 
@@ -55,6 +58,9 @@ const DEFAULT_BOARD: BoardSettings = {
     searchFilter: "title_content",
     sortOrder: "latest",
     turnstileEnabled: false,
+    mediaEnabled: true,
+    defaultImageAlign: 'center',
+    defaultImageSize: 'original',
     forbiddenWords: [],
 };
 

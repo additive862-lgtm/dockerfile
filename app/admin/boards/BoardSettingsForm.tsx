@@ -6,7 +6,7 @@ import { updateBoardSettings } from "@/app/actions/admin";
 import { X, Plus, Trash2, Save, RotateCcw } from "lucide-react";
 
 interface BoardSettings {
-    id: number;
+    id?: number;
     category: string;
     name: string;
     layoutType: 'LIST' | 'CARD' | 'GALLERY';
