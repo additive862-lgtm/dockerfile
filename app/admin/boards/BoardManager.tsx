@@ -121,9 +121,9 @@ export function BoardManager({ initialSettings }: { initialSettings: BoardSettin
                                     <TableCell className="font-mono text-xs text-muted-foreground">{board.category}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
-                                            {board.commentEnabled && <MessageSquare className="h-4 w-4 text-blue-500" title="댓글 활성" />}
-                                            {board.secretPostEnabled && <Shield className="h-4 w-4 text-amber-500" title="비밀글 지원" />}
-                                            {board.turnstileEnabled && <Info className="h-4 w-4 text-green-500" title="Turnstile 활성" />}
+                                            {board.commentEnabled && <span title="댓글 활성"><MessageSquare className="h-4 w-4 text-blue-500" /></span>}
+                                            {board.secretPostEnabled && <span title="비밀글 지원"><Shield className="h-4 w-4 text-amber-500" /></span>}
+                                            {board.turnstileEnabled && <span title="Turnstile 활성"><Info className="h-4 w-4 text-green-500" /></span>}
                                         </div>
                                     </TableCell>
                                     <TableCell>
