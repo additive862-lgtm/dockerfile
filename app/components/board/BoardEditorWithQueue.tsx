@@ -113,7 +113,7 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
     });
 
     const handleFileUpload = async (files: File[]) => {
-        if (!settings.mediaEnabled) {
+        if (!settings?.mediaEnabled) {
             alert('이 게시판은 이미지 첨부가 비활성화되어 있습니다.');
             return;
         }
@@ -126,8 +126,8 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
                 continue;
             }
 
-            if (attachments.length >= (settings.maxAttachmentCount || 10)) {
-                alert(`최대 ${settings.maxAttachmentCount || 10}개까지만 첨부할 수 있습니다.`);
+            if (attachments.length >= (settings?.maxAttachmentCount || 10)) {
+                alert(`최대 ${settings?.maxAttachmentCount || 10}개까지만 첨부할 수 있습니다.`);
                 break;
             }
 
@@ -137,7 +137,7 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
             try {
                 // Compression
                 const options = {
-                    maxSizeMB: settings.maxAttachmentSize || 1,
+                    maxSizeMB: settings?.maxAttachmentSize || 1,
                     maxWidthOrHeight: 1920,
                     useWebWorker: true
                 };
@@ -323,7 +323,7 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
                 <div className="flex items-center justify-between mb-4">
                     <h5 className="text-sm font-extrabold text-slate-700 flex items-center gap-2">
                         <ImageIcon size={16} />
-                        미디어 레이아웃 큐 ({attachments.length}/{settings.maxAttachmentCount || 10})
+                        미디어 레이아웃 큐 ({attachments.length}/{settings?.maxAttachmentCount || 10})
                         <span className="text-[10px] text-slate-400 font-normal ml-2 hidden sm:inline">
                             * 본문에 삽입된 이미지는 하단 첨부파일 목록에서 제외됩니다.
                         </span>
