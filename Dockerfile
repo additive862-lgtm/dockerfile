@@ -9,9 +9,9 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 
-# Force cache invalidation by running a harmless echo or reordering
-# Timestamp: 2026-01-25 22:20
-RUN echo "Installing dependencies..." && npm install
+# Force cache invalidation and clean install
+# Timestamp: 2026-01-25 23:22
+RUN rm -rf node_modules package-lock.json && npm install
 
 # Rebuild the source code only when needed
 FROM base AS builder
