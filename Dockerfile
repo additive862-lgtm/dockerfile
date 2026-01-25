@@ -67,7 +67,14 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
+# Install prisma locally in runner to ensure npx uses it instantly
+RUN npm install prisma@6.19.1
+
+# Expose port and start
+EXPOSE 3000
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 CMD ["/bin/sh", "-c", "npx prisma db push --accept-data-loss && node server.js"]
