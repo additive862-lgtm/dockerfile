@@ -38,7 +38,9 @@ ENV NODE_ENV production
 # ENV NEXT_TELEMETRY_DISABLED 1
 
 # Install Python and hwp5html for HWP conversion
-RUN apk add --no-cache python3 py3-pip
+# py3-lxml is required to avoid compiling lxml from source which takes long and often fails on Alpine
+RUN apk add --no-cache python3 py3-pip py3-lxml libxml2 libxslt
+# Install hwp5html (using system lxml to save time)
 RUN pip3 install --no-cache-dir --break-system-packages hwp5html
 
 RUN addgroup --system --gid 1001 nodejs
