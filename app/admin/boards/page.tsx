@@ -29,7 +29,7 @@ export default async function BoardManagementPage() {
                 <p className="text-muted-foreground">게시판별 권한, 기능, 카테고리 태그 등을 제어할 수 있습니다.</p>
             </div>
 
-            <BoardManager initialSettings={settings as any} />
+            <BoardManager initialSettings={settings as any} initialBoards={INITIAL_BOARDS} />
         </div>
     );
 }
