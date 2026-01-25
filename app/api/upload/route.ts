@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { r2, R2_BUCKET, R2_PUBLIC_DOMAIN } from '@/lib/r2';
+import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export async function POST(request: Request) {
     try {
         const session = await auth();
-        // If needed, check session here
+        // Permission checks can be added here if needed
 
         const data = await request.formData();
         const file: File | null = data.get('file') as unknown as File;
@@ -28,15 +27,24 @@ export async function POST(request: Request) {
         const extension = file.name ? file.name.split('.').pop() : (isImage ? 'png' : 'bin');
         const filename = `${timestamp}-${uniqueId}.${extension}`;
 
-        const uploadDir = join(process.cwd(), 'public', 'uploads', subDir);
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true });
-        }
+        // Key (path) in R2
+        const key = `uploads/${subDir}/${filename}`;
 
-        const filePath = join(uploadDir, filename);
-        await writeFile(filePath, buffer);
+        // Upload to R2
+        await r2.send(new PutObjectCommand({
+            Bucket: R2_BUCKET,
+            Key: key,
+            Body: buffer,
+            ContentType: file.type,
+        }));
 
-        const fileUrl = `/uploads/${subDir}/${filename}`;
+        // Construct Path
+        // If R2_PUBLIC_DOMAIN is set, use it. Otherwise, fallback to a placeholder or direct public access format if configured.
+        // Assuming user will set R2_PUBLIC_DOMAIN or we use the relative path if we proxy (but we want to offload).
+        // If no domain is set, we might have issues viewing.
+        const fileUrl = R2_PUBLIC_DOMAIN
+            ? `${R2_PUBLIC_DOMAIN}/${key}`
+            : `/uploads/${subDir}/${filename}`; // Fallback (or broken if no local file) - User MUST set R2_PUBLIC_DOMAIN
 
         // Save to DB
         const attachment = await prisma.attachment.create({
@@ -71,7 +79,37 @@ export async function DELETE(request: Request) {
 
         if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
 
-        // Soft delete
+        // Get file info from DB
+        const attachment = await prisma.attachment.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (attachment && attachment.fileUrl) {
+            // Extract Key from URL
+            // URL formats:
+            // 1. https://domain.com/uploads/images/file.png -> uploads/images/file.png
+            // 2. /uploads/images/file.png -> uploads/images/file.png
+
+            let key = attachment.fileUrl;
+            if (key.startsWith('http')) {
+                const urlObj = new URL(key);
+                key = urlObj.pathname.substring(1); // remove leading slash
+            } else if (key.startsWith('/')) {
+                key = key.substring(1);
+            }
+
+            try {
+                await r2.send(new DeleteObjectCommand({
+                    Bucket: R2_BUCKET,
+                    Key: key,
+                }));
+            } catch (r2Error) {
+                console.error("Failed to delete from R2:", r2Error);
+                // Continue to delete from DB even if R2 fails (soft delete mostly)
+            }
+        }
+
+        // Soft delete in DB
         await prisma.attachment.update({
             where: { id: parseInt(id) },
             data: { deletedAt: new Date() }
