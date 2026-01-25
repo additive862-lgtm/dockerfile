@@ -205,6 +205,7 @@ export async function updateBoardSettings(category: string, data: any) {
         });
 
         revalidatePath("/admin/boards");
+        revalidatePath("/"); // Update Home Page
         return { success: true };
     } catch (error) {
         if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
@@ -230,6 +231,7 @@ export async function initializeBoardSettings(boards: { category: string, name: 
         }
 
         revalidatePath("/admin/boards");
+        revalidatePath("/"); // Update Home Page
         return { success: true };
     } catch (error) {
         if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;

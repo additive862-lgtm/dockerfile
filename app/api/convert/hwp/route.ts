@@ -12,7 +12,10 @@ const execAsync = promisify(exec);
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'hwp-images');
 const PUBLIC_URL_BASE = '/uploads/hwp-images';
-const HWP5HTML_PATH = 'C:\\Users\\mugen\\AppData\\Roaming\\Python\\Python314\\Scripts\\hwp5html.exe';
+const HWP5HTML_PATH = process.platform === 'win32'
+    ? 'C:\\Users\\mugen\\AppData\\Roaming\\Python\\Python314\\Scripts\\hwp5html.exe'
+    : 'hwp5html'; // Assume it's in PATH for Linux
+
 const LOG_FILE = path.join(process.cwd(), 'hwp-process.log');
 
 async function debugLog(msg: string) {
@@ -48,6 +51,8 @@ export async function POST(request: Request) {
 
         const outputFolderName = 'result';
         const outputDirPath = path.join(tempDir, outputFolderName);
+
+        // Command construction
         const command = `"${HWP5HTML_PATH}" --output "${outputFolderName}" "${inputFileName}"`;
 
         await debugLog(`Executing hwp5html: ${command}`);
@@ -56,6 +61,13 @@ export async function POST(request: Request) {
             await debugLog('hwp5html completed successfully');
         } catch (error: any) {
             await debugLog(`hwp5html failed: ${error.message}`);
+            // Check if it's a command not found error
+            if (error.message.includes('not found') || error.code === 127) {
+                return NextResponse.json({
+                    error: '서버에 HWP 변환 도구(hwp5html)가 설치되어 있지 않습니다. 관리자에게 문의하세요.',
+                    details: 'Command not found'
+                }, { status: 404 }); // 404 for feature not found
+            }
             return NextResponse.json({ error: 'HWP 변환 실패', details: error.message }, { status: 500 });
         }
 
