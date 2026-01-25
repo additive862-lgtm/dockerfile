@@ -5,7 +5,7 @@ import { Button } from "@/app/components/ui/button";
 import { updateBoardSettings } from "@/app/actions/admin";
 import { X, Plus, Trash2, Save, RotateCcw } from "lucide-react";
 
-interface BoardSettings {
+export interface BoardSettings {
     id?: number;
     category: string;
     name: string;
@@ -29,6 +29,7 @@ interface BoardSettings {
     defaultImageSize: 'original' | 'full';
     forbiddenWords: string[];
     hwpImportEnabled: boolean;
+    showOnHome: boolean;
 }
 
 export function BoardSettingsForm({ settings, onSave, onCancel }: { settings: BoardSettings, onSave: (s: BoardSettings) => void, onCancel: () => void }) {
@@ -163,6 +164,15 @@ export function BoardSettingsForm({ settings, onSave, onCancel }: { settings: Bo
                         className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
                     />
                     <span className="text-sm font-bold">Turnstile (봇방지)</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={formData.showOnHome}
+                        onChange={(e) => setFormData({ ...formData, showOnHome: e.target.checked })}
+                        className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm font-bold">메인 화면에 표시</span>
                 </label>
             </div>
 

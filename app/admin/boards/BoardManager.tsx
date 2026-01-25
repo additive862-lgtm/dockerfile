@@ -12,34 +12,10 @@ import {
 } from "@/app/components/ui/table";
 import { Button } from "@/app/components/ui/button";
 import { Settings2, MessageSquare, Shield, Info, Plus, Trash2, AlertCircle } from "lucide-react";
-import { BoardSettingsForm } from "./BoardSettingsForm";
+import { BoardSettingsForm, type BoardSettings } from "./BoardSettingsForm";
 import { deleteBoard } from "@/app/actions/admin";
 
-interface BoardSettings {
-    id?: number; // Optional for creation
-    category: string;
-    name: string;
-    layoutType: 'LIST' | 'CARD' | 'GALLERY';
-    commentEnabled: boolean;
-    secretPostEnabled: boolean;
-    noticeEnabled: boolean;
-    categories: string[];
-    writePermission: string;
-    commentPermission: string;
-    attachPermission: string;
-    maxAttachmentCount: number;
-    maxAttachmentSize: number;
-    postsPerPage: number;
-    totalSizeLimit: number;
-    searchFilter: string;
-    sortOrder: string;
-    turnstileEnabled: boolean;
-    mediaEnabled: boolean;
-    defaultImageAlign: 'left' | 'center' | 'right';
-    defaultImageSize: 'original' | 'full';
-    forbiddenWords: string[];
-    hwpImportEnabled: boolean;
-}
+
 
 const DEFAULT_BOARD: BoardSettings = {
     category: "",
@@ -64,6 +40,7 @@ const DEFAULT_BOARD: BoardSettings = {
     defaultImageSize: 'original',
     forbiddenWords: [],
     hwpImportEnabled: false,
+    showOnHome: false,
 };
 
 
