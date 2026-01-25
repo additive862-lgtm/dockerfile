@@ -4,10 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
+import { redirect } from "next/navigation";
+
 async function checkAdmin() {
     const session = await auth();
     if (!session?.user || session.user.role !== "ADMIN") {
-        throw new Error("Unauthorized");
+        console.error("Admin check failed: Unauthorized session or role", { session });
+        redirect("/login");
     }
     return session;
 }
@@ -33,10 +36,15 @@ export async function getAdminStats() {
     };
 }
 
+// Helper to serialize Prisma objects for Client Components
+function serializeData<T>(data: T): T {
+    return JSON.parse(JSON.stringify(data));
+}
+
 export async function getRecentUsers() {
     await checkAdmin();
 
-    return await prisma.user.findMany({
+    const users = await prisma.user.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
         select: {
@@ -48,12 +56,14 @@ export async function getRecentUsers() {
             createdAt: true,
         },
     });
+
+    return serializeData(users);
 }
 
 export async function getAllUsers() {
     await checkAdmin();
 
-    return await prisma.user.findMany({
+    const users = await prisma.user.findMany({
         orderBy: { createdAt: "desc" },
         select: {
             id: true,
@@ -64,6 +74,8 @@ export async function getAllUsers() {
             createdAt: true,
         },
     });
+
+    return serializeData(users);
 }
 
 export async function toggleUserRole(userId: string, currentRole: string) {
@@ -105,19 +117,16 @@ export async function getPostsStats() {
         },
     });
 
-    // Also get all distinct categories from Post table to ensure we have all
-    // But categories are strings, so just group is fine.
-
-    return posts.map(p => ({
+    return serializeData(posts.map(p => ({
         category: p.category,
         count: p._count.id,
-    }));
+    })));
 }
 
 export async function getPostsWithComments() {
     await checkAdmin();
 
-    return await prisma.post.findMany({
+    const posts = await prisma.post.findMany({
         orderBy: { createdAt: "desc" },
         include: {
             _count: {
@@ -125,13 +134,17 @@ export async function getPostsWithComments() {
             }
         }
     });
+
+    return serializeData(posts);
 }
 
 export async function getBoardSettings() {
     await checkAdmin();
-    return await prisma.boardSettings.findMany({
+    const settings = await prisma.boardSettings.findMany({
         orderBy: { name: "asc" }
     });
+
+    return serializeData(settings);
 }
 
 export async function updateBoardSettings(category: string, data: any) {
@@ -193,7 +206,7 @@ export async function deleteBoard(category: string) {
 // Menu Actions
 export async function getMenus() {
     await checkAdmin();
-    return await prisma.navigationMenu.findMany({
+    const menus = await prisma.navigationMenu.findMany({
         orderBy: { order: "asc" },
         include: {
             subMenus: {
@@ -202,6 +215,8 @@ export async function getMenus() {
         },
         where: { parentId: null } // Get top-level menus first
     });
+
+    return serializeData(menus);
 }
 
 export async function updateMenu(id: number | null, data: any) {
