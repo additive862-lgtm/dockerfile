@@ -10,6 +10,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Force cache invalidation by running a harmless echo or reordering
+# Timestamp: 2026-01-25 22:20
 RUN echo "Installing dependencies..." && npm install
 
 # Rebuild the source code only when needed
