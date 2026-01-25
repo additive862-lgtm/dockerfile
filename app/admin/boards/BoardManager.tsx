@@ -38,6 +38,7 @@ interface BoardSettings {
     defaultImageAlign: 'left' | 'center' | 'right';
     defaultImageSize: 'original' | 'full';
     forbiddenWords: string[];
+    hwpImportEnabled: boolean;
 }
 
 const DEFAULT_BOARD: BoardSettings = {
@@ -62,6 +63,7 @@ const DEFAULT_BOARD: BoardSettings = {
     defaultImageAlign: 'center',
     defaultImageSize: 'original',
     forbiddenWords: [],
+    hwpImportEnabled: false,
 };
 
 
