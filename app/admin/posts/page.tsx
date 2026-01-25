@@ -1,7 +1,8 @@
-import { getBoardSettings, getPostsStats, getPostsWithComments } from "@/app/actions/admin";
+import { getBoardSettings, getPostsStats, getPostsWithComments, checkAdmin } from "@/app/actions/admin";
 import { PostManager } from "./PostManager";
 
 export default async function PostManagementPage() {
+    await checkAdmin();
     const [boardStats, posts, allSettings] = await Promise.all([
         getPostsStats(),
         getPostsWithComments(),

@@ -1,11 +1,14 @@
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
+import { checkAdmin } from "@/app/actions/admin";
 
-export default function AdminLayout({
+export default async function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    await checkAdmin();
+
     return (
         <div className="min-h-screen bg-[#f9fafb] flex">
             {/* Sidebar with responsiveness built-in */}

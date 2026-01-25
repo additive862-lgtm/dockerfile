@@ -1,7 +1,8 @@
-import { getAllUsers } from "@/app/actions/admin";
+import { getAllUsers, checkAdmin } from "@/app/actions/admin";
 import { UserTable } from "./UserTable";
 
 export default async function MemberManagementPage() {
+    await checkAdmin();
     const users = await getAllUsers();
 
     return (

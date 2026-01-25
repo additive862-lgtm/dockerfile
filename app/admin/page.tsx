@@ -1,4 +1,4 @@
-import { getAdminStats, getRecentUsers, getBoardSettings } from "@/app/actions/admin";
+import { getAdminStats, getRecentUsers, getBoardSettings, checkAdmin } from "@/app/actions/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import {
     Table,
@@ -12,6 +12,9 @@ import { Users, UserPlus, FileText, PenTool } from "lucide-react";
 import HomeBoardSelector from "./HomeBoardSelector";
 
 export default async function AdminDashboardPage() {
+    // 1. Perform admin check sequentially before parallel data fetching
+    await checkAdmin();
+
     const [stats, recentUsers, allBoards] = await Promise.all([
         getAdminStats(),
         getRecentUsers(),
@@ -19,10 +22,10 @@ export default async function AdminDashboardPage() {
     ]);
 
     const statCards = [
-        { title: "총 회원 수", value: stats.totalUsers, icon: Users, color: "text-blue-600" },
-        { title: "오늘 가입자", value: stats.todayUsers, icon: UserPlus, color: "text-green-600" },
-        { title: "전체 게시글 수", value: stats.totalPosts, icon: FileText, color: "text-purple-600" },
-        { title: "오늘 새 글", value: stats.todayPosts, icon: PenTool, color: "text-orange-600" },
+        { title: "총 회원 수", value: stats?.totalUsers ?? 0, icon: Users, color: "text-blue-600" },
+        { title: "오늘 가입자", value: stats?.todayUsers ?? 0, icon: UserPlus, color: "text-green-600" },
+        { title: "전체 게시글 수", value: stats?.totalPosts ?? 0, icon: FileText, color: "text-purple-600" },
+        { title: "오늘 새 글", value: stats?.todayPosts ?? 0, icon: PenTool, color: "text-orange-600" },
     ];
 
     return (

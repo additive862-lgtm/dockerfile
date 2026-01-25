@@ -1,4 +1,4 @@
-import { getBoardSettings, initializeBoardSettings } from "@/app/actions/admin";
+import { getBoardSettings, initializeBoardSettings, checkAdmin } from "@/app/actions/admin";
 import { BoardManager } from "./BoardManager";
 import { getCategoryDisplayName } from "@/lib/board-utils";
 
@@ -14,6 +14,7 @@ const INITIAL_BOARDS = [
 ];
 
 export default async function BoardManagementPage() {
+    await checkAdmin();
     let settings = await getBoardSettings();
 
     if (settings.length === 0) {

@@ -1,7 +1,8 @@
-import { getMenus } from "@/app/actions/admin";
+import { getMenus, checkAdmin } from "@/app/actions/admin";
 import { MenuManager } from "./MenuManager";
 
 export default async function AdminMenuPage() {
+    await checkAdmin();
     const menus = await getMenus();
 
     return (
