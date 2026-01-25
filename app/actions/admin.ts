@@ -234,7 +234,7 @@ export async function initializeBoardSettings(boards: { category: string, name: 
     } catch (error) {
         if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to initialize board settings:", error);
-        return { success: false, error: "게시판 초기화 중 오류가 발생했습니다." };
+        return { success: false, error: `게시판 초기화 실패: ${(error as Error).message}` };
     }
 }
 
