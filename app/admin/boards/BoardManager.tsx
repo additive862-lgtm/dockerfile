@@ -11,7 +11,7 @@ import {
     TableRow,
 } from "@/app/components/ui/table";
 import { Button } from "@/app/components/ui/button";
-import { Button } from "@/app/components/ui/button";
+
 import { Settings2, MessageSquare, Shield, Info, Plus, Trash2, AlertCircle, Download } from "lucide-react";
 import { BoardSettingsForm, type BoardSettings } from "./BoardSettingsForm";
 import { deleteBoard, initializeBoardSettings } from "@/app/actions/admin";
