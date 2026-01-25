@@ -169,6 +169,8 @@ export function BoardWriteForm({ category, initialTab, settings, editId, initial
         const dbCategory = getMappedCategory(category, selectedTab, settings);
 
         try {
+            const finalThumbnail = thumbnail || (editorAttachments.length > 0 ? editorAttachments[0].url : null);
+
             const res = await fetch('/api/board', {
                 method: editId ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -177,7 +179,7 @@ export function BoardWriteForm({ category, initialTab, settings, editId, initial
                     title,
                     author,
                     content,
-                    thumbnail,
+                    thumbnail: finalThumbnail,
                     category: dbCategory,
                     attachments: [
                         ...attachments.map(a => ({ ...a, isEmbedded: false })),
@@ -281,7 +283,7 @@ export function BoardWriteForm({ category, initialTab, settings, editId, initial
                 />
             </div>
 
-            {/* Representative Image (Thumbnail) */}
+            {/* Representative Image (Thumbnail) - Hidden by default, auto-selected from content
             <div className="space-y-4 pt-4">
                 <label className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-2">
                     <Paperclip size={18} />
@@ -339,6 +341,7 @@ export function BoardWriteForm({ category, initialTab, settings, editId, initial
                     </div>
                 </div>
             </div>
+            */}
 
             {/* Files & Links Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-slate-100">

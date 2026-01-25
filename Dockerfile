@@ -37,6 +37,10 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# Install Python and hwp5html for HWP conversion
+RUN apk add --no-cache python3 py3-pip
+RUN pip3 install --no-cache-dir --break-system-packages hwp5html
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
