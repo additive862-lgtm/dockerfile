@@ -66,8 +66,12 @@ RUN npm install prisma@6.19.1
 
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
+# Ensure the nextjs user owns the app directory
+RUN chown -R nextjs:nodejs /app
+
 # Switch to nextjs user at the very end
 USER nextjs
+
 
 # Expose port and start
 EXPOSE 3000
