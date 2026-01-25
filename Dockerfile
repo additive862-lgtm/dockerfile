@@ -8,7 +8,9 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm install
+
+# Force cache invalidation by running a harmless echo or reordering
+RUN echo "Installing dependencies..." && npm install
 
 # Rebuild the source code only when needed
 FROM base AS builder
