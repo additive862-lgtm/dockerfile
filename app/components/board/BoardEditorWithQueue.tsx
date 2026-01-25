@@ -170,9 +170,10 @@ export function BoardEditorWithQueue({ content, onChange, settings, category, on
             try {
                 // Compression
                 const options = {
-                    maxSizeMB: settings?.maxAttachmentSize || 1,
-                    maxWidthOrHeight: 1920,
-                    useWebWorker: true
+                    maxSizeMB: Math.min(settings?.maxAttachmentSize || 1, 1), // Limit to 1MB max for safety
+                    maxWidthOrHeight: 1280, // Resize large images
+                    useWebWorker: true,
+                    fileType: 'image/webp' // Convert to WebP for efficiency
                 };
                 const compressedFile = await imageCompression(file, options);
 
