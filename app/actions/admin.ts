@@ -46,6 +46,7 @@ export async function getAdminStats() {
             todayPosts,
         };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get admin stats:", error);
         return {
             totalUsers: 0,
@@ -78,6 +79,7 @@ export async function getRecentUsers() {
 
         return serializeData(users);
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get recent users:", error);
         return [];
     }
@@ -99,6 +101,7 @@ export async function getAllUsers() {
 
         return serializeData(users);
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get all users:", error);
         return [];
     }
@@ -147,6 +150,7 @@ export async function getPostsStats() {
             count: p._count.id,
         })));
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get posts stats:", error);
         return [];
     }
@@ -165,6 +169,7 @@ export async function getPostsWithComments() {
 
         return serializeData(posts);
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get posts with comments:", error);
         return [];
     }
@@ -178,6 +183,7 @@ export async function getBoardSettings() {
 
         return serializeData(settings);
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get board settings:", error);
         return [];
     }
@@ -201,6 +207,7 @@ export async function updateBoardSettings(category: string, data: any) {
         revalidatePath("/admin/boards");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to update board settings:", error);
         return { success: false, error: "설정 저장 중 오류가 발생했습니다." };
     }
@@ -225,6 +232,7 @@ export async function initializeBoardSettings(boards: { category: string, name: 
         revalidatePath("/admin/boards");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to initialize board settings:", error);
         return { success: false, error: "게시판 초기화 중 오류가 발생했습니다." };
     }
@@ -245,6 +253,7 @@ export async function deleteBoard(category: string) {
         revalidatePath("/admin/boards");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to delete board:", error);
         return { success: false, error: "게시판 삭제 중 오류가 발생했습니다." };
     }
@@ -265,6 +274,7 @@ export async function getMenus() {
 
         return serializeData(menus);
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to get menus:", error);
         return [];
     }
@@ -291,6 +301,7 @@ export async function updateMenu(id: number | null, data: any) {
         revalidatePath("/admin/menus");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to update menu:", error);
         return { success: false, error: "메뉴 저장 중 오류가 발생했습니다." };
     }
@@ -307,6 +318,7 @@ export async function deleteMenu(id: number) {
         revalidatePath("/admin/menus");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to delete menu:", error);
         return { success: false, error: "메뉴 삭제 중 오류가 발생했습니다." };
     }
@@ -326,6 +338,7 @@ export async function reorderMenus(items: { id: number, order: number }[]) {
         revalidatePath("/", "layout");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to reorder menus:", error);
         return { success: false, error: "메뉴 순서 변경 중 오류가 발생했습니다." };
     }
@@ -393,6 +406,7 @@ export async function seedDefaultMenus() {
         revalidatePath("/", "layout");
         return { success: true };
     } catch (error) {
+        if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error("Failed to seed default menus:", error);
         return { success: false, error: "기본 메뉴 생성 중 오류가 발생했습니다." };
     }

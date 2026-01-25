@@ -46,6 +46,8 @@ export function BoardSettingsForm({ settings, onSave, onCancel }: { settings: Bo
             if (res.success) {
                 onSave(formData);
                 alert("설정이 저장되었습니다.");
+            } else {
+                alert(res.error || "저장에 실패했습니다.");
             }
         } catch (error) {
             console.error(error);

@@ -143,7 +143,7 @@ export default function About() {
                                 <li><strong>인천가톨릭대학교</strong> 제4대 총장 역임</li>
                                 <li>인천가톨릭대학교 전임교수 (1996년 ~ )</li>
                                 <li>신학교 건설본부장, 복음화연구소장, 사무처장, 교무처장, 대학원장 역임</li>
-                                <li>현 <strong>가정동 성당</strong> 주임신부</li>
+                                <li>현 <strong>성사 전담 사제</strong></li>
                             </ul>
                         </div>
                     </div>
