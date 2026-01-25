@@ -11,9 +11,10 @@ import {
     TableRow,
 } from "@/app/components/ui/table";
 import { Button } from "@/app/components/ui/button";
-import { Settings2, MessageSquare, Shield, Info, Plus, Trash2, AlertCircle } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
+import { Settings2, MessageSquare, Shield, Info, Plus, Trash2, AlertCircle, Download } from "lucide-react";
 import { BoardSettingsForm, type BoardSettings } from "./BoardSettingsForm";
-import { deleteBoard } from "@/app/actions/admin";
+import { deleteBoard, initializeBoardSettings } from "@/app/actions/admin";
 
 
 
@@ -45,10 +46,11 @@ const DEFAULT_BOARD: BoardSettings = {
 
 
 
-export function BoardManager({ initialSettings }: { initialSettings: BoardSettings[] }) {
+export function BoardManager({ initialSettings, initialBoards }: { initialSettings: BoardSettings[], initialBoards?: any[] }) {
     const [settingsList, setSettingsList] = useState<BoardSettings[]>(initialSettings);
     const [editingBoard, setEditingBoard] = useState<BoardSettings | null>(null);
     const [deletingBoard, setDeletingBoard] = useState<BoardSettings | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleUpdate = (updated: BoardSettings) => {
         setSettingsList(prev => {
@@ -77,9 +79,41 @@ export function BoardManager({ initialSettings }: { initialSettings: BoardSettin
     };
 
 
+    const handleInitializeDefaults = async () => {
+        if (!initialBoards) return;
+        if (!confirm("기본(초기) 게시판 구성을 DB로 가져오시겠습니까? 기존 설정은 유지됩니다.")) return;
+
+        setIsSubmitting(true);
+        try {
+            const res = await initializeBoardSettings(initialBoards);
+            if (res.success) {
+                alert("기본 게시판이 생성되었습니다. 페이지를 새로고침합니다.");
+                window.location.reload();
+            } else {
+                alert(res.error || "초기화 실패");
+            }
+        } catch (error) {
+            alert("오류가 발생했습니다.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    {initialBoards && settingsList.length < initialBoards.length && (
+                        <Button
+                            variant="outline"
+                            onClick={handleInitializeDefaults}
+                            disabled={isSubmitting}
+                            className="gap-2 border-slate-200"
+                        >
+                            <Download className="h-4 w-4" /> 기본 게시판 가져오기
+                        </Button>
+                    )}
+                </div>
                 <Button onClick={() => setEditingBoard(DEFAULT_BOARD)} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
                     <Plus className="h-4 w-4" /> 게시판 추가
                 </Button>
