@@ -9,7 +9,7 @@ export function SafeHtml({ html }: { html: string }) {
     useEffect(() => {
         setSanitizedHtml(DOMPurify.sanitize(html, {
             ADD_TAGS: ['iframe'],
-            ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src'],
+            ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'style'],
         }));
     }, [html]);
 
@@ -21,7 +21,7 @@ export function SafeHtml({ html }: { html: string }) {
             dangerouslySetInnerHTML={{
                 __html: sanitizedHtml || DOMPurify.sanitize(html, {
                     ADD_TAGS: ['iframe'],
-                    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src'],
+                    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'style'],
                 })
             }}
         />

@@ -272,6 +272,7 @@ export function BoardWriteForm({ category, initialTab, settings, editId, initial
             <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 ml-1">본문</label>
                 <BoardEditor
+                    category={category}
                     content={content}
                     onChange={setContent}
                     settings={settings}

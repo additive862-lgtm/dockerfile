@@ -1,0 +1,16 @@
+--- HWP Conversion POST Started ---
+[2026-01-25T01:56:00.611Z] Job Started: 4d9ba9d9-fcdb-4395-b2cc-5b316f8a8efa for file: 제1강 역사란 무엇인가.hwp
+[2026-01-25T01:56:00.614Z] Input file written: D:\SERVER-DU\public\uploads\tmp\4d9ba9d9-fcdb-4395-b2cc-5b316f8a8efa\input.hwp
+[2026-01-25T01:56:00.614Z] Executing hwp5html: "C:\Users\mugen\AppData\Roaming\Python\Python314\Scripts\hwp5html.exe" --output "result" "input.hwp"
+[2026-01-25T01:56:00.957Z] hwp5html completed successfully
+[2026-01-25T01:56:00.960Z] Raw HTML saved
+[2026-01-25T01:56:00.960Z] styles.css found (44541 bytes)
+[2026-01-25T01:56:00.962Z] Starting Juice inlining...
+[2026-01-25T01:56:01.040Z] Juice completed. Inlined length: 69537
+[2026-01-25T01:56:01.044Z] Processing 2 images...
+[2026-01-25T01:56:01.047Z] Image processed: BIN0001.JPG -> 4d9ba9d9-fcdb-4395-b2cc-5b316f8a8efa_0.JPG
+[2026-01-25T01:56:01.050Z] Image processed: BIN0002.TMP -> 4d9ba9d9-fcdb-4395-b2cc-5b316f8a8efa_1.jpg
+[2026-01-25T01:56:01.050Z] Starting Recursive Style Extraction...
+[2026-01-25T01:56:01.057Z] Style Extraction completed
+[2026-01-25T01:56:01.063Z] Final HTML saved to debug file
+[2026-01-25T01:56:01.065Z] Temp directory removed

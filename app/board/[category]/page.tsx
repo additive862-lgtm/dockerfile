@@ -3,6 +3,7 @@ import { Pagination } from '../../components/board/BoardComponents';
 import { BoardList } from '../../components/board/BoardList';
 import { BoardTabs } from '../../components/board/BoardTabs';
 import { getMappedCategory } from '@/lib/board-utils';
+import { auth } from '@/auth';
 
 import Link from 'next/link';
 import { PenSquare } from 'lucide-react';
@@ -38,10 +39,13 @@ const MAIN_TITLE_MAP: Record<string, string> = {
 
 
 
+import BoardHeader from '../../components/board/BoardHeader';
+
 export default async function BoardCategoryPage({ params, searchParams }: PageProps) {
     const { category } = params;
     const { page, tab } = searchParams;
 
+    const session = await auth();
     const currentPage = parseInt(page || '1');
     const pageSize = category === 'gallery' ? 9 : 10;
 
@@ -57,32 +61,22 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
     // If it's a main category with tabs, use MAIN_TITLE_MAP, otherwise use CATEGORY_MAP based on dbCategory
     // If settings has a name, use it as priority
     const title = settings?.name || MAIN_TITLE_MAP[category] || (typeof dbCategory === 'string' ? CATEGORY_MAP[dbCategory] : null) || '게시판';
+    const description = "유익한 정보와 소식을 나누는 공간입니다.";
 
-    const isGallery = category === 'gallery';
+    // Permission Check
+    const writePermission = settings?.writePermission || 'USER';
+    const canWrite =
+        writePermission === 'GUEST' ||
+        (writePermission === 'USER' && !!session?.user) ||
+        (writePermission === 'ADMIN' && session?.user?.role === 'ADMIN');
 
     return (
         <div className="bg-white min-h-screen">
             {/* Header */}
-            <div className="bg-slate-50 py-16 border-b border-slate-100">
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="flex justify-between items-end">
-                        <div className="space-y-4">
-                            <h1 className="text-4xl font-extrabold text-[#001f3f] tracking-tight">{title}</h1>
-                            <p className="text-lg text-slate-500 font-medium">유익한 정보와 소식을 나누는 공간입니다.</p>
-                        </div>
-                        <Link
-                            href={`/board/${category}/write?tab=${tab || ''}`} // Pass current tab to write page
-                            className="flex items-center gap-2 px-6 py-3.5 bg-[#001f3f] text-white rounded-2xl hover:bg-blue-900 transition-all font-bold shadow-xl shadow-slate-200"
-                        >
-                            <PenSquare size={20} />
-                            <span>글쓰기</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
+            <BoardHeader title={title} description={description} category={category} />
 
             {/* Content */}
-            <div className="max-w-6xl mx-auto px-6 py-12">
+            <div className="max-w-6xl mx-auto px-6 py-12 relative">
 
                 {/* Tabs (Rendered if configured for this category) */}
                 <BoardTabs category={category} settings={settings as any} />
@@ -96,11 +90,27 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
                     settings={settings}
                 />
 
-                <Pagination
-                    totalCount={totalCount}
-                    currentPage={currentPage}
-                    pageSize={pageSize}
-                />
+                <div className="relative mt-8 min-h-[50px]">
+                    <div className="flex justify-center">
+                        <Pagination
+                            totalCount={totalCount}
+                            currentPage={currentPage}
+                            pageSize={pageSize}
+                        />
+                    </div>
+                    {/* Floating Write Button positioned at the bottom-right */}
+                    {canWrite && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                            <Link
+                                href={`/board/${category}/write?tab=${tab || ''}`}
+                                className="flex items-center gap-2 px-6 py-3 bg-[#001f3f] text-white rounded-xl hover:bg-blue-900 transition-all font-bold shadow-lg shadow-slate-200"
+                            >
+                                <PenSquare size={20} />
+                                <span>글쓰기</span>
+                            </Link>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

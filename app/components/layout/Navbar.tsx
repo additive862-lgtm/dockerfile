@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, BookOpen, Clock, Users, House, MessageSquare } from 'lucide-react';
+import { Menu, X, ChevronDown, BookOpen, Clock, Users, House, MessageSquare, History, ScrollText, Compass, MessageCircle } from 'lucide-react';
 import AuthButton from '../auth/AuthButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -27,12 +27,24 @@ interface NavItem {
     dropdown?: NavSubItem[];
 }
 
+/** 2. 아이콘 매핑 헬퍼 */
+function getIconByMenuName(name: string) {
+    const size = 18;
+    if (name.includes('소개')) return <House size={size} />;
+    if (name.includes('교회사') || name.includes('역사')) return <History size={size} />;
+    if (name.includes('강론')) return <ScrollText size={size} />;
+    if (name.includes('성경') || name.includes('여행')) return <Compass size={size} />;
+    if (name.includes('샘') || name.includes('이야기')) return <MessageCircle size={size} />;
+    if (name.includes('커뮤니티') || name.includes('게시판')) return <Users size={size} />;
+    return <BookOpen size={size} />;
+}
+
 const FALLBACK_MENU: NavItem[] = [
-    { name: '두돌소개', path: '/about', icon: <House size={18} /> },
-    { name: '교회사', path: '/board/church', icon: <Clock size={18} /> },
+    { name: '두돌소개', path: '/about', icon: getIconByMenuName('두돌소개') },
+    { name: '교회사', path: '/board/church', icon: getIconByMenuName('교회사') },
     {
         name: '강론',
-        icon: <BookOpen size={18} />,
+        icon: getIconByMenuName('강론'),
         dropdown: [
             { name: '오늘의 강론', path: '/board/daily-homily' },
             { name: '주일/대축일 강론', path: '/board/sunday-homily' },
@@ -42,16 +54,16 @@ const FALLBACK_MENU: NavItem[] = [
     },
     {
         name: '맘도성경여행',
-        icon: <BookOpen size={18} />,
+        icon: getIconByMenuName('맘도성경여행'),
         dropdown: [
             { name: '맘도 성서 해설', path: '/board/mamdo-commentary' },
             { name: '성경', path: '/board/bible' },
         ],
     },
-    { name: '이야기 샘', path: '/board/story-spring', icon: <MessageSquare size={18} /> },
+    { name: '이야기 샘', path: '/board/story-spring', icon: getIconByMenuName('이야기 샘') },
     {
         name: '커뮤니티',
-        icon: <Users size={18} />,
+        icon: getIconByMenuName('커뮤니티'),
         dropdown: [
             { name: '자유게시판', path: '/board/free-board' },
             { name: '갤러리', path: '/board/gallery' },
@@ -63,14 +75,24 @@ const FALLBACK_MENU: NavItem[] = [
 export default function Navbar({ initialMenus }: { initialMenus?: any[] }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const [logoText, setLogoText] = useState('두돌');
+    const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
+
+    useEffect(() => {
+        setMounted(true);
+        const interval = setInterval(() => {
+            setLogoText(prev => prev === '두돌' ? 'DUDOL' : '두돌');
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Map DB menus to NavItem structure
     const mappedMenus: NavItem[] = initialMenus && initialMenus.length > 0
         ? initialMenus.map(m => ({
             name: m.name,
             path: m.path || undefined,
-            icon: <BookOpen size={18} />, // Default icon for all for now, can be improved
+            icon: getIconByMenuName(m.name),
             dropdown: m.subMenus && m.subMenus.length > 0
                 ? m.subMenus.map((sm: any) => ({ name: sm.name, path: sm.path || "" }))
                 : undefined
@@ -96,13 +118,28 @@ export default function Navbar({ initialMenus }: { initialMenus?: any[] }) {
 
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto px-6">
                 <div className="flex justify-between items-center h-20">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center space-x-2 group">
-                        <span className="text-3xl font-black tracking-tight text-[#001f3f] group-hover:opacity-80 transition-opacity">
-                            두돌
-                        </span>
+                    <Link href="/" className="flex items-center space-x-2 group h-10 overflow-hidden">
+                        {!mounted ? (
+                            <span className="text-3xl font-black tracking-tight text-[#001f3f]">
+                                두돌
+                            </span>
+                        ) : (
+                            <AnimatePresence mode="wait">
+                                <motion.span
+                                    key={logoText}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.8 }}
+                                    className="text-3xl font-black tracking-tight text-[#001f3f] min-w-[100px]"
+                                >
+                                    {logoText}
+                                </motion.span>
+                            </AnimatePresence>
+                        )}
                     </Link>
 
                     {/* Right Side Group (Nav + Auth + Mobile Menu) */}
@@ -226,7 +263,22 @@ export default function Navbar({ initialMenus }: { initialMenus?: any[] }) {
                         >
                             <div className="p-6">
                                 <div className="flex justify-between items-center mb-10">
-                                    <span className="text-2xl font-black text-[#001f3f]">두돌</span>
+                                    {!mounted ? (
+                                        <span className="text-2xl font-black text-[#001f3f]">두돌</span>
+                                    ) : (
+                                        <AnimatePresence mode="wait">
+                                            <motion.span
+                                                key={logoText}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.8 }}
+                                                className="text-2xl font-black text-[#001f3f]"
+                                            >
+                                                {logoText}
+                                            </motion.span>
+                                        </AnimatePresence>
+                                    )}
                                     <button onClick={() => setIsMenuOpen(false)} className="text-slate-400">
                                         <X size={32} />
                                     </button>

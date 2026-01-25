@@ -129,7 +129,7 @@ export function PostManager({ boardStats, initialPosts, allSettings }: { boardSt
                                 filteredPosts.map((post) => (
                                     <TableRow key={post.id}>
                                         <TableCell className="font-medium truncate max-w-[400px]">
-                                            <a href={`/board/${post.category}/${post.id}`} target="_blank" rel="noreferrer" className="hover:underline">
+                                            <a href={`/board/${post.category}/${post.id}`} className="hover:underline">
                                                 {post.title}
                                             </a>
                                         </TableCell>

@@ -11,12 +11,15 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import TableRow from '@tiptap/extension-table-row';
 import Underline from '@tiptap/extension-underline';
+import { TextStyle } from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
+import { HwpDropExtension } from './extensions/HwpDropExtension';
 import {
     Bold, Italic, Underline as UnderlineIcon, Strikethrough,
     Heading1, Heading2, Heading3, List, ListOrdered, Quote,
     Code, Image as ImageIcon, Table as TableIcon, Undo, Redo,
-    Plus, Minus, Columns, Rows, X, Loader2, Upload, Youtube as YoutubeIcon
+    Plus, Minus, Columns, Rows, X, Loader2, Upload, Youtube as YoutubeIcon, Palette
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import imageCompression from 'browser-image-compression';
@@ -32,6 +35,7 @@ interface BoardEditorWithQueueProps {
     content: string;
     onChange: (content: string) => void;
     settings: any;
+    category: string;
     onAttachmentsChange?: (attachments: Attachment[]) => void;
     initialAttachments?: any[];
 }
@@ -45,6 +49,17 @@ const MenuBar = ({ editor, onYoutubeClick }: { editor: Editor | null, onYoutubeC
             <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={cn("p-2 rounded hover:bg-slate-100", editor.isActive('italic') ? 'bg-slate-100 text-blue-600' : 'text-slate-600')}><Italic size={18} /></button>
             <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={cn("p-2 rounded hover:bg-slate-100", editor.isActive('underline') ? 'bg-slate-100 text-blue-600' : 'text-slate-600')}><UnderlineIcon size={18} /></button>
             <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={cn("p-2 rounded hover:bg-slate-100", editor.isActive('strike') ? 'bg-slate-100 text-blue-600' : 'text-slate-600')}><Strikethrough size={18} /></button>
+            <div className="relative flex items-center">
+                <input
+                    type="color"
+                    onInput={(e) => editor.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
+                    value={editor.getAttributes('textStyle').color || '#000000'}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                />
+                <button type="button" className={cn("p-2 rounded hover:bg-slate-100", editor.getAttributes('textStyle').color ? 'text-blue-600' : 'text-slate-600')}>
+                    <Palette size={18} style={{ color: editor.getAttributes('textStyle').color }} />
+                </button>
+            </div>
             <div className="w-px h-6 bg-slate-200 mx-1" />
             <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cn("p-2 rounded hover:bg-slate-100", editor.isActive('heading', { level: 1 }) ? 'bg-slate-100 text-blue-600' : 'text-slate-600')}><Heading1 size={18} /></button>
             <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={cn("p-2 rounded hover:bg-slate-100", editor.isActive('heading', { level: 2 }) ? 'bg-slate-100 text-blue-600' : 'text-slate-600')}><Heading2 size={18} /></button>
@@ -72,7 +87,7 @@ const MenuBar = ({ editor, onYoutubeClick }: { editor: Editor | null, onYoutubeC
     );
 };
 
-export function BoardEditorWithQueue({ content, onChange, settings, onAttachmentsChange, initialAttachments = [] }: BoardEditorWithQueueProps) {
+export function BoardEditorWithQueue({ content, onChange, settings, category, onAttachmentsChange, initialAttachments = [] }: BoardEditorWithQueueProps) {
     const [attachments, setAttachments] = useState<Attachment[]>(() =>
         initialAttachments.map(a => ({
             id: a.id,
@@ -82,6 +97,7 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
         }))
     );
     const [isDragging, setIsDragging] = useState(false);
+    const [isHwpConverting, setIsHwpConverting] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
     const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -89,16 +105,32 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
 
     const editor = useEditor({
         extensions: [
-            StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+            StarterKit.configure({
+                heading: { levels: [1, 2, 3] },
+            }),
             Image.configure({ inline: true, allowBase64: true }),
             Link.configure({ openOnClick: false }),
             Placeholder.configure({ placeholder: '여기에 내용을 입력하거나 문서를 붙여넣으세요...' }),
             Table.configure({ resizable: true }),
-            TableRow, TableHeader, TableCell, Underline,
+            TableRow,
+            TableHeader,
+            TableCell,
+            // Rich Text Extensions
+            Underline,
+            TextStyle,
+            Color.configure({
+                types: ['textStyle'],
+            }),
             Youtube.configure({
                 controls: true,
                 nocookie: true,
                 allowFullscreen: true,
+            }),
+            HwpDropExtension.configure({
+                category: category,
+                enabled: settings?.hwpImportEnabled || false,
+                onLoading: (loading) => setIsHwpConverting(loading),
+                onError: (msg) => alert(msg),
             }),
         ],
         content: content,
@@ -110,6 +142,7 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
         },
+        immediatelyRender: false,
     });
 
     const handleFileUpload = async (files: File[]) => {
@@ -230,9 +263,21 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => {
+                const files = Array.from(e.dataTransfer.files);
+                const hasHwp = files.some(f => {
+                    const ext = f.name.split('.').pop()?.toLowerCase();
+                    return ext === 'hwp' || ext === 'hwpx';
+                });
+
+                if (hasHwp && settings?.hwpImportEnabled) {
+                    // Let HwpDropExtension handle it
+                    setIsDragging(false);
+                    return;
+                }
+
                 e.preventDefault();
                 setIsDragging(false);
-                handleFileUpload(Array.from(e.dataTransfer.files));
+                handleFileUpload(files);
             }}
         >
             <MenuBar editor={editor} onYoutubeClick={() => setIsYoutubeModalOpen(true)} />
@@ -313,6 +358,18 @@ export function BoardEditorWithQueue({ content, onChange, settings, onAttachment
                         <div className="flex flex-col items-center gap-2">
                             <Upload size={48} />
                             <p className="font-bold">이미지를 드래그하여 업로드하세요</p>
+                        </div>
+                    </div>
+                )}
+                {isHwpConverting && (
+                    <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 animate-in fade-in duration-200">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+                            <Upload className="absolute inset-0 m-auto text-blue-600 w-6 h-6" />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-lg font-black text-slate-800">HWP 문서 변환 중...</p>
+                            <p className="text-sm font-bold text-slate-400">잠시만 기다려 주세요.</p>
                         </div>
                     </div>
                 )}

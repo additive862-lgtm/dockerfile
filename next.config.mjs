@@ -5,7 +5,15 @@ const nextConfig = {
     env: {
         DATABASE_URL: process.env.DATABASE_URL || "",
     },
-    // 이미지 호스팅 도메인 등 필요한 설정 추가 가능
+    // 이미지 호스팅 도메인 설정
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'images.unsplash.com',
+            },
+        ],
+    },
 };
 
 export default nextConfig;

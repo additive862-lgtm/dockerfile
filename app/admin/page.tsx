@@ -1,4 +1,4 @@
-import { getAdminStats, getRecentUsers } from "@/app/actions/admin";
+import { getAdminStats, getRecentUsers, getBoardSettings } from "@/app/actions/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import {
     Table,
@@ -9,10 +9,14 @@ import {
     TableRow,
 } from "@/app/components/ui/table";
 import { Users, UserPlus, FileText, PenTool } from "lucide-react";
+import HomeBoardSelector from "./HomeBoardSelector";
 
 export default async function AdminDashboardPage() {
-    const stats = await getAdminStats();
-    const recentUsers = await getRecentUsers();
+    const [stats, recentUsers, allBoards] = await Promise.all([
+        getAdminStats(),
+        getRecentUsers(),
+        getBoardSettings()
+    ]);
 
     const statCards = [
         { title: "총 회원 수", value: stats.totalUsers, icon: Users, color: "text-blue-600" },
@@ -77,6 +81,9 @@ export default async function AdminDashboardPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            {/* Main Page Board Selection */}
+            <HomeBoardSelector initialBoards={allBoards} />
         </div>
     );
 }

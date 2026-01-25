@@ -115,6 +115,8 @@ model BoardSettings {
   defaultImageAlign   String   @default("center")  // left, center, right
   defaultImageSize    String   @default("full")    // original, full
   forbiddenWords      String[] @default([])
+  showOnHome          Boolean  @default(false)
+  hwpImportEnabled    Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }

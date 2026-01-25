@@ -39,7 +39,7 @@ export default async function RootLayout({
 
           {/* Footer */}
           <footer className="bg-white border-t border-slate-200 py-12 mt-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-600">
+            <div className="max-w-6xl mx-auto px-6 text-center text-slate-600">
               <p className="text-base">© 2026 Dudol. All rights reserved.</p>
               <p className="text-xs mt-2">이석재 신부 (토마스 데 아퀴나스)</p>
               <VisitorCounterDisplay />
