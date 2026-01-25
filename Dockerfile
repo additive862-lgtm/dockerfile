@@ -55,23 +55,20 @@ COPY --from=builder /app/public ./public
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
+# Install prisma globally to avoid npx downloads
 RUN npm install -g prisma
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Expose port and start
 # Copy standalone build to root
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-
 USER nextjs
 
 EXPOSE 3000
-
 ENV PORT 3000
-# set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-CMD ["/bin/sh", "-c", "npx prisma db push --accept-data-loss && node server.js"]
+CMD ["/bin/sh", "-c", "prisma db push --accept-data-loss && node server.js"]

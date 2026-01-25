@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 5180",
     "build": "prisma generate && next build",
-    "start": "npx prisma db push && node server.js",
+    "start": "prisma db push && node server.js",
     "lint": "eslint"
   },
   "dependencies": {

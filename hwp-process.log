@@ -1,16 +1,16 @@
 --- HWP Conversion POST Started ---
-[2026-01-25T14:02:11.058Z] Job Started: 7ab88731-e84e-47cc-bfb1-a627ab8aa903 for file: 제1강 역사란 무엇인가.hwp
-[2026-01-25T14:02:11.062Z] Input file written: D:\SERVER-DU\public\uploads\tmp\7ab88731-e84e-47cc-bfb1-a627ab8aa903\input.hwp
-[2026-01-25T14:02:11.062Z] Executing hwp5html: "C:\Users\mugen\AppData\Roaming\Python\Python314\Scripts\hwp5html.exe" --output "result" "input.hwp"
-[2026-01-25T14:02:11.453Z] hwp5html completed successfully
-[2026-01-25T14:02:11.456Z] Raw HTML saved
-[2026-01-25T14:02:11.457Z] styles.css found (44541 bytes)
-[2026-01-25T14:02:11.458Z] Starting Juice inlining...
-[2026-01-25T14:02:11.573Z] Juice completed. Inlined length: 69537
-[2026-01-25T14:02:11.584Z] Processing 2 images...
-[2026-01-25T14:02:12.336Z] Image uploaded to R2: 7ab88731-e84e-47cc-bfb1-a627ab8aa903_0.JPG
-[2026-01-25T14:02:12.616Z] Image uploaded to R2: 7ab88731-e84e-47cc-bfb1-a627ab8aa903_1.jpg
-[2026-01-25T14:02:12.617Z] Starting Recursive Style Extraction...
-[2026-01-25T14:02:12.626Z] Style Extraction completed
-[2026-01-25T14:02:12.629Z] Final HTML saved to debug file
-[2026-01-25T14:02:12.632Z] Temp directory removed
+[2026-01-25T14:08:11.555Z] Job Started: e9df27fe-8feb-4c84-ba7f-3c6962dbfa97 for file: 제1강 역사란 무엇인가.hwp
+[2026-01-25T14:08:11.558Z] Input file written: D:\SERVER-DU\public\uploads\tmp\e9df27fe-8feb-4c84-ba7f-3c6962dbfa97\input.hwp
+[2026-01-25T14:08:11.558Z] Executing hwp5html: "C:\Users\mugen\AppData\Roaming\Python\Python314\Scripts\hwp5html.exe" --output "result" "input.hwp"
+[2026-01-25T14:08:11.903Z] hwp5html completed successfully
+[2026-01-25T14:08:11.905Z] Raw HTML saved
+[2026-01-25T14:08:11.906Z] styles.css found (44541 bytes)
+[2026-01-25T14:08:11.907Z] Starting Juice inlining...
+[2026-01-25T14:08:12.041Z] Juice completed. Inlined length: 69537
+[2026-01-25T14:08:12.068Z] Processing 2 images...
+[2026-01-25T14:08:12.395Z] Image uploaded to R2: e9df27fe-8feb-4c84-ba7f-3c6962dbfa97_0.JPG
+[2026-01-25T14:08:12.692Z] Image uploaded to R2: e9df27fe-8feb-4c84-ba7f-3c6962dbfa97_1.jpg
+[2026-01-25T14:08:12.693Z] Starting Recursive Style Extraction...
+[2026-01-25T14:08:12.703Z] Style Extraction completed
+[2026-01-25T14:08:12.706Z] Final HTML saved to debug file
+[2026-01-25T14:08:12.709Z] Temp directory removed
