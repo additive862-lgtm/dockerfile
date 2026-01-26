@@ -40,9 +40,13 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Install Python and hwp5html for HWP conversion
-# py3-lxml is required to avoid compiling lxml from source which takes long and often fails on Alpine
-RUN apk add --no-cache python3 py3-pip py3-lxml libxml2 libxslt
+# Set environment variables for Korean support
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Install Python, dependencies, and shell tools
+RUN apk add --no-cache python3 py3-pip py3-lxml libxml2 libxslt bash ghostscript
+
 # Install hwp5html (via pyhwp package)
 RUN pip3 install --no-cache-dir --break-system-packages pyhwp
 

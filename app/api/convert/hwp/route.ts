@@ -13,27 +13,26 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 const execAsync = promisify(exec);
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'hwp-images');
-const PUBLIC_URL_BASE = '/uploads/hwp-images';
-const HWP5HTML_PATH = process.platform === 'win32'
-    ? 'C:\\Users\\mugen\\AppData\\Roaming\\Python\\Python314\\Scripts\\hwp5html.exe'
-    : 'hwp5html'; // Assume it's in PATH for Linux
-
-const LOG_FILE = path.join(process.cwd(), 'hwp-process.log');
+const LOG_FILE = '/tmp/hwp-process.log'; // Use /tmp for more reliable writes
 
 async function debugLog(msg: string) {
     console.log(msg);
     const timestamp = new Date().toISOString();
-    await fs.appendFile(LOG_FILE, `[${timestamp}] ${msg}\n`, 'utf8');
+    try {
+        await fs.appendFile(LOG_FILE, `[${timestamp}] ${msg}\n`, 'utf8');
+    } catch (e) {
+        console.error('Failed to write to log file', e);
+    }
 }
 
 export async function POST(request: Request) {
-    await fs.ensureDir(UPLOAD_DIR);
-    await fs.writeFile(LOG_FILE, '--- HWP Conversion POST Started ---\n', 'utf8');
-
     const jobId = uuidv4();
-    const tempDir = path.join(process.cwd(), 'public', 'uploads', 'tmp', jobId);
+    const tempDir = path.join('/tmp', 'dudol-hwp', jobId); // Use /tmp for conversion tasks
 
     try {
+        await fs.ensureDir(UPLOAD_DIR);
+        await fs.ensureDir(tempDir);
+        await debugLog(`--- HWP Job Started: ${jobId} ---`);
         const formData = await request.formData();
         const file = formData.get('file') as File;
 
@@ -54,8 +53,12 @@ export async function POST(request: Request) {
         const outputFolderName = 'result';
         const outputDirPath = path.join(tempDir, outputFolderName);
 
+        const HWP5HTML_EXEC = process.platform === 'win32'
+            ? 'C:\\Users\\mugen\\AppData\\Roaming\\Python\\Python314\\Scripts\\hwp5html.exe'
+            : 'hwp5html';
+
         // Command construction
-        const command = `"${HWP5HTML_PATH}" --output "${outputFolderName}" "${inputFileName}"`;
+        const command = `"${HWP5HTML_EXEC}" --output "${outputFolderName}" "${inputFileName}"`;
 
         await debugLog(`Executing hwp5html: ${command}`);
         try {
