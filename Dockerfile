@@ -60,11 +60,15 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Set home to a writable directory for npx/npm cache
+ENV HOME=/tmp
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
+
 # Install prisma locally in runner to ensure npx uses it instantly
-# Run as root to ensure permissions for install
 RUN npm install prisma@6.19.1
 
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Ensure the nextjs user owns the app directory
 RUN chown -R nextjs:nodejs /app
@@ -72,11 +76,10 @@ RUN chown -R nextjs:nodejs /app
 # Switch to nextjs user at the very end
 USER nextjs
 
-
 # Expose port and start
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Try running server.js from root, if not found try .next/standalone/server.js
-CMD ["/bin/sh", "-c", "npx prisma db push --accept-data-loss && (node server.js || node .next/standalone/server.js)"]
+# Use --skip-generate to avoid permission issues with writing to node_modules at runtime
+CMD ["/bin/sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && (node server.js || node .next/standalone/server.js)"]
