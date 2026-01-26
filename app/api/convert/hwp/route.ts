@@ -100,15 +100,15 @@ export async function POST(request: Request) {
         }
 
         let htmlContent = await fs.readFile(htmlFilePath, 'utf-8');
-        await fs.writeFile(path.join(process.cwd(), 'hwp-raw.html'), htmlContent, 'utf8');
-        await debugLog('Raw HTML saved');
+        await fs.writeFile(path.join('/tmp', 'hwp-raw.html'), htmlContent, 'utf8');
+        await debugLog('Raw HTML saved to /tmp');
 
         const cssFilePath = path.join(outputDirPath, 'styles.css');
         let cssContent = '';
         if (await fs.pathExists(cssFilePath)) {
             cssContent = await fs.readFile(cssFilePath, 'utf8');
             await debugLog(`styles.css found (${cssContent.length} bytes)`);
-            await fs.writeFile(path.join(process.cwd(), 'hwp-styles.css'), cssContent, 'utf8');
+            await fs.writeFile(path.join('/tmp', 'hwp-styles.css'), cssContent, 'utf8');
         } else {
             await debugLog('styles.css NOT found');
         }
@@ -211,8 +211,8 @@ export async function POST(request: Request) {
         await debugLog('Style Extraction completed');
 
         const finalHtml = $('body').html() || $.html();
-        await fs.writeFile(path.join(process.cwd(), 'hwp-debug.html'), finalHtml, 'utf8');
-        await debugLog('Final HTML saved to debug file');
+        await fs.writeFile(path.join('/tmp', 'hwp-debug.html'), finalHtml, 'utf8');
+        await debugLog('Final HTML saved to /tmp/hwp-debug.html');
 
         // Cleanup
         await fs.remove(tempDir);
