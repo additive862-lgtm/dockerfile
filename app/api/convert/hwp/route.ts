@@ -135,49 +135,54 @@ export async function POST(request: Request) {
         await debugLog(`Processing ${images.length} images...`);
 
         const imageElements = images.toArray();
+        await debugLog(`Found ${imageElements.length} image elements to process`);
+
         for (let i = 0; i < imageElements.length; i++) {
             const el = imageElements[i];
             const originalSrc = $(el).attr('src');
             if (originalSrc) {
                 const cleanSrc = originalSrc.replace(/\\/g, '/');
                 const rawFileName = path.basename(cleanSrc);
-                const ext = path.extname(rawFileName);
-                const safeExt = ext.toLowerCase() === '.tmp' ? '.jpg' : ext;
-                const newFileName = `${jobId}_${i}${safeExt}`;
+                let ext = path.extname(rawFileName).toLowerCase();
 
-                // R2 Key
+                // HWP images often have .tmp or missing extensions
+                if (!ext || ext === '.tmp') ext = '.jpg';
+
+                const newFileName = `${jobId}_${i}${ext}`;
                 const r2Key = `uploads/hwp-images/${newFileName}`;
 
                 // Construct Public URL
                 const publicUrl = R2_PUBLIC_DOMAIN
-                    ? `${R2_PUBLIC_DOMAIN}/${r2Key}`
-                    : `/uploads/hwp-images/${newFileName}`; // Fallback if no domain
+                    ? `${R2_PUBLIC_DOMAIN.replace(/\/$/, '')}/${r2Key}`
+                    : `/uploads/hwp-images/${newFileName}`;
 
                 let sourcePath = path.join(bindataDir, rawFileName);
                 if (!await fs.pathExists(sourcePath)) sourcePath = path.join(outputDirPath, rawFileName);
                 if (!await fs.pathExists(sourcePath)) sourcePath = path.join(tempDir, rawFileName);
 
                 if (await fs.pathExists(sourcePath)) {
-                    // Read file
-                    const fileBuffer = await fs.readFile(sourcePath);
-
-                    // Upload to R2
                     try {
+                        const fileBuffer = await fs.readFile(sourcePath);
+                        const mimeType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' :
+                            ext === '.png' ? 'image/png' :
+                                ext === '.gif' ? 'image/gif' : `image/${ext.replace('.', '')}`;
+
+                        await debugLog(`Uploading ${rawFileName} as ${newFileName} (${fileBuffer.length} bytes, type: ${mimeType})`);
+
                         await r2.send(new PutObjectCommand({
                             Bucket: R2_BUCKET,
                             Key: r2Key,
                             Body: fileBuffer,
-                            ContentType: `image/${safeExt.replace('.', '')}`
+                            ContentType: mimeType,
                         }));
-                        await debugLog(`Image uploaded to R2: ${newFileName}`);
 
-                        // Update Source
+                        await debugLog(`Successfully uploaded to R2: ${publicUrl}`);
                         $(el).attr('src', publicUrl);
                     } catch (uploadErr: any) {
-                        await debugLog(`Failed to upload image to R2: ${uploadErr.message}`);
+                        await debugLog(`Failed to upload ${rawFileName} to R2: ${uploadErr.message}`);
                     }
                 } else {
-                    await debugLog(`Warning: Image NOT FOUND: ${rawFileName}`);
+                    await debugLog(`Warning: Image file not found on disk: ${rawFileName}`);
                 }
             }
         }
