@@ -47,8 +47,8 @@ ENV LC_ALL=C.UTF-8
 # Install Python, dependencies, and shell tools
 RUN apk add --no-cache python3 py3-pip py3-lxml libxml2 libxslt bash ghostscript
 
-# Install hwp5html (via pyhwp package)
-RUN pip3 install --no-cache-dir --break-system-packages pyhwp
+# Install hwp5html (via pyhwp package) and its dependency 'six'
+RUN pip3 install --no-cache-dir --break-system-packages pyhwp six
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
