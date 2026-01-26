@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         // Assuming user will set R2_PUBLIC_DOMAIN or we use the relative path if we proxy (but we want to offload).
         // If no domain is set, we might have issues viewing.
         const fileUrl = R2_PUBLIC_DOMAIN
-            ? `${R2_PUBLIC_DOMAIN}/${key}`
+            ? `${R2_PUBLIC_DOMAIN.replace(/\/$/, '')}/${key}`
             : `/uploads/${subDir}/${filename}`; // Fallback (or broken if no local file) - User MUST set R2_PUBLIC_DOMAIN
 
         // Save to DB
