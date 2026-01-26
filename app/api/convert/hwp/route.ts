@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         await debugLog(`Job Started: ${jobId} for file: ${file.name}`);
         await fs.ensureDir(tempDir);
 
-        const inputFileName = `input${path.extname(file.name)}`;
+        const inputFileName = `${jobId}${path.extname(file.name) || '.hwp'}`; // Safe UUID filename
         const inputFilePath = path.join(tempDir, inputFileName);
         const buffer = Buffer.from(await file.arrayBuffer());
         await fs.writeFile(inputFilePath, buffer);
@@ -52,33 +52,31 @@ export async function POST(request: Request) {
 
         const outputFolderName = 'result';
         const outputDirPath = path.join(tempDir, outputFolderName);
+        await fs.ensureDir(outputDirPath);
 
         const HWP5HTML_EXEC = process.platform === 'win32'
             ? 'C:\\Users\\mugen\\AppData\\Roaming\\Python\\Python314\\Scripts\\hwp5html.exe'
             : 'hwp5html';
 
-        // Check if command exists (Linux only check for now)
+        // Check if command exists
         if (process.platform !== 'win32') {
             try {
                 await execAsync('which hwp5html');
             } catch (e) {
-                await debugLog('Error: hwp5html command not found in PATH');
-                return NextResponse.json({
-                    error: '변환 도구가 설치되지 않았습니다.',
-                    details: 'hwp5html not found in PATH'
-                }, { status: 404 });
+                await debugLog('Error: hwp5html not found in PATH');
+                return NextResponse.json({ error: '변환 도구를 찾을 수 없습니다.' }, { status: 404 });
             }
         }
 
-        // Command construction
         const command = `"${HWP5HTML_EXEC}" --output "${outputFolderName}" "${inputFileName}"`;
+        await debugLog(`Executing: ${command}`);
 
-        await debugLog(`Executing hwp5html: ${command}`);
         try {
-            const { stdout, stderr } = await execAsync(command, { cwd: tempDir, timeout: 60000 }); // 60s timeout
-            if (stdout) await debugLog(`hwp5html stdout: ${stdout.substring(0, 500)}...`);
-            if (stderr) await debugLog(`hwp5html stderr: ${stderr}`);
-            await debugLog('hwp5html completed successfully');
+            const env = { ...process.env, PYTHONIOENCODING: 'utf-8', LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8' };
+            const { stdout, stderr } = await execAsync(command, { cwd: tempDir, timeout: 60000, env });
+            if (stdout) await debugLog(`stdout: ${stdout.substring(0, 500)}`);
+            if (stderr) await debugLog(`stderr: ${stderr}`);
+            await debugLog('hwp5html success');
         } catch (error: any) {
             await debugLog(`hwp5html failed: ${error.message}`);
             return NextResponse.json({
