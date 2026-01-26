@@ -7,8 +7,8 @@ const getEnv = (key: string) => {
     return (val && val.trim().length > 0) ? val.trim() : undefined;
 };
 
-const accessKeyId = getEnv('AWS_ACCESS_KEY') || getEnv('R2_ACCESS_KEY_ID');
-const secretAccessKey = getEnv('AWS_SECRET_KEY') || getEnv('R2_SECRET_ACCESS_KEY');
+const accessKeyId = getEnv('R2_ACCESS_KEY') || getEnv('R2_ACCESS_KEY_ID') || getEnv('AWS_ACCESS_KEY');
+const secretAccessKey = getEnv('R2_SECRET_KEY') || getEnv('R2_SECRET_ACCESS_KEY') || getEnv('AWS_SECRET_KEY');
 const r2AccountId = getEnv('R2_ACCOUNT_ID');
 let customEndpoint = getEnv('AWS_S3_ENDPOINT_URL');
 
@@ -23,7 +23,7 @@ if (customEndpoint && !customEndpoint.startsWith('http')) {
 const endpoint = customEndpoint || (r2AccountId ? `https://${r2AccountId}.r2.cloudflarestorage.com` : undefined);
 
 export const r2 = new S3Client({
-    region: getEnv('AWS_S3_REGION') || 'auto',
+    region: getEnv('R2_S3_REGION') || getEnv('AWS_S3_REGION') || 'auto',
     endpoint: endpoint,
     credentials: {
         accessKeyId: accessKeyId || '',
@@ -31,5 +31,5 @@ export const r2 = new S3Client({
     },
 });
 
-export const R2_BUCKET = getEnv('AWS_S3_BUCKET') || getEnv('R2_BUCKET_NAME') || 'r2bucket-dudol';
+export const R2_BUCKET = getEnv('R2_S3_BUCKET') || getEnv('AWS_S3_BUCKET') || getEnv('R2_BUCKET_NAME') || 'r2bucket-dudol';
 export const R2_PUBLIC_DOMAIN = getEnv('R2_PUBLIC_DOMAIN');
