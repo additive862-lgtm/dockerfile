@@ -57,23 +57,36 @@ export async function POST(request: Request) {
             ? 'C:\\Users\\mugen\\AppData\\Roaming\\Python\\Python314\\Scripts\\hwp5html.exe'
             : 'hwp5html';
 
+        // Check if command exists (Linux only check for now)
+        if (process.platform !== 'win32') {
+            try {
+                await execAsync('which hwp5html');
+            } catch (e) {
+                await debugLog('Error: hwp5html command not found in PATH');
+                return NextResponse.json({
+                    error: '변환 도구가 설치되지 않았습니다.',
+                    details: 'hwp5html not found in PATH'
+                }, { status: 404 });
+            }
+        }
+
         // Command construction
         const command = `"${HWP5HTML_EXEC}" --output "${outputFolderName}" "${inputFileName}"`;
 
         await debugLog(`Executing hwp5html: ${command}`);
         try {
-            await execAsync(command, { cwd: tempDir });
+            const { stdout, stderr } = await execAsync(command, { cwd: tempDir, timeout: 60000 }); // 60s timeout
+            if (stdout) await debugLog(`hwp5html stdout: ${stdout.substring(0, 500)}...`);
+            if (stderr) await debugLog(`hwp5html stderr: ${stderr}`);
             await debugLog('hwp5html completed successfully');
         } catch (error: any) {
             await debugLog(`hwp5html failed: ${error.message}`);
-            // Check if it's a command not found error
-            if (error.message.includes('not found') || error.code === 127) {
-                return NextResponse.json({
-                    error: '서버에 HWP 변환 도구(hwp5html)가 설치되어 있지 않습니다. 관리자에게 문의하세요.',
-                    details: 'Command not found'
-                }, { status: 404 }); // 404 for feature not found
-            }
-            return NextResponse.json({ error: 'HWP 변환 실패', details: error.message }, { status: 500 });
+            return NextResponse.json({
+                error: 'HWP 변환 실패',
+                details: error.message,
+                stdout: error.stdout,
+                stderr: error.stderr
+            }, { status: 500 });
         }
 
         let htmlFilePath = path.join(outputDirPath, 'index.html');
