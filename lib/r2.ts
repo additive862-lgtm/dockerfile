@@ -10,7 +10,7 @@ const getEnv = (key: string) => {
 const accessKeyId = getEnv('R2_ACCESS_KEY') || getEnv('R2_ACCESS_KEY_ID') || getEnv('AWS_ACCESS_KEY');
 const secretAccessKey = getEnv('R2_SECRET_KEY') || getEnv('R2_SECRET_ACCESS_KEY') || getEnv('AWS_SECRET_KEY');
 const r2AccountId = getEnv('R2_ACCOUNT_ID');
-let customEndpoint = getEnv('AWS_S3_ENDPOINT_URL');
+let customEndpoint = getEnv('R2_ENDPOINT') || getEnv('AWS_S3_ENDPOINT_URL');
 
 // Force fix customEndpoint if it's just the account ID or missing https
 if (customEndpoint && !customEndpoint.startsWith('http')) {
@@ -22,9 +22,14 @@ if (customEndpoint && !customEndpoint.startsWith('http')) {
 
 const endpoint = customEndpoint || (r2AccountId ? `https://${r2AccountId}.r2.cloudflarestorage.com` : undefined);
 
+if (!endpoint) {
+    console.warn('WARNING: R2 Endpoint is not configured. S3 client will fallback to default AWS endpoints, which may cause ENOTFOUND errors.');
+}
+
 export const r2 = new S3Client({
     region: getEnv('R2_S3_REGION') || getEnv('AWS_S3_REGION') || 'auto',
     endpoint: endpoint,
+    forcePathStyle: true, // Crucial for Cloudflare R2 compatibility
     credentials: {
         accessKeyId: accessKeyId || '',
         secretAccessKey: secretAccessKey || '',
