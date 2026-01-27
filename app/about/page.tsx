@@ -71,7 +71,7 @@ export default function About() {
                             두돌 소개
                         </h1>
                         <p className="text-base md:text-lg text-slate-100 font-normal drop-shadow-md">
-                            이석재 토마스 데 아퀴나스 신부를 소개합니다.
+                            이석재 토마스 아퀴나스 신부를 소개합니다.
                         </p>
                     </motion.div>
                 </div>
@@ -98,7 +98,7 @@ export default function About() {
                                 >
                                     <Image
                                         src={PROFILE_IMAGES[currentIdx]}
-                                        alt="이석재 토마스 데 아퀴나스"
+                                        alt="이석재 토마스 아퀴나스"
                                         fill
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
@@ -108,7 +108,7 @@ export default function About() {
                             {/* Name Overlay - Matching the mockup */}
                             <div className="absolute bottom-0 inset-x-0 h-16 bg-black/60 backdrop-blur-[2px] flex items-center justify-center gap-6 text-white border-t border-white/10">
                                 <span className="text-2xl font-bold tracking-tight">이석재</span>
-                                <span className="text-lg font-normal opacity-90">토마스 데 아퀴나스</span>
+                                <span className="text-lg font-normal opacity-90">토마스 아퀴나스</span>
                             </div>
                         </div>
                     </div>

@@ -47,10 +47,13 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
 
     const session = await auth();
     const currentPage = parseInt(page || '1');
-    const pageSize = category === 'gallery' ? 9 : 10;
 
     // Fetch dynamic settings from CMS
     const settings = await getBoardSettingsByCategory(category);
+
+    // Determine Page Size (CMS Setting > Default)
+    const defaultPageSize = category === 'gallery' ? 9 : 10;
+    const pageSize = settings?.postsPerPage || defaultPageSize;
 
     // Map route category + tab -> DB category key (or keys)
     const dbCategory = getMappedCategory(category, tab, settings);
