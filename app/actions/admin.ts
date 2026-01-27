@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { performInitialSeed } from "@/lib/seed";
 
 import { redirect } from "next/navigation";
 
@@ -350,60 +351,10 @@ export async function seedDefaultMenus() {
     try {
         await checkAdmin();
 
-        // Check if menus already exist
         const count = await prisma.navigationMenu.count();
         if (count > 0) return { error: "이미 메뉴가 존재합니다." };
 
-        const defaultStructure = [
-            { name: '두돌소개', path: '/about', order: 0 },
-            { name: '교회사', path: '/board/church', order: 1 },
-            {
-                name: '강론',
-                order: 2,
-                subMenus: [
-                    { name: '오늘의 강론', path: '/board/daily-homily', order: 0 },
-                    { name: '주일/대축일 강론', path: '/board/sunday-homily', order: 1 },
-                    { name: '축일/기념일 강론', path: '/board/feast-homily', order: 2 },
-                    { name: '특별강론', path: '/board/special-homily', order: 3 },
-                ]
-            },
-            {
-                name: '맘도성경여행',
-                order: 3,
-                subMenus: [
-                    { name: '맘도 성서 해설', path: '/board/mamdo-commentary', order: 0 },
-                    { name: '성경', path: '/board/bible', order: 1 },
-                ]
-            },
-            { name: '이야기 샘', path: '/board/story-spring', order: 4 },
-            {
-                name: '커뮤니티',
-                order: 5,
-                subMenus: [
-                    { name: '자유게시판', path: '/board/free-board', order: 0 },
-                    { name: '갤러리', path: '/board/gallery', order: 1 },
-                    { name: '질문과 답변', path: '/board/qna', order: 2 },
-                ]
-            },
-        ];
-
-        for (const item of defaultStructure) {
-            const { subMenus, ...parentData } = item;
-            const parent = await prisma.navigationMenu.create({
-                data: parentData
-            });
-
-            if (subMenus) {
-                for (const sub of subMenus) {
-                    await prisma.navigationMenu.create({
-                        data: {
-                            ...sub,
-                            parentId: parent.id
-                        }
-                    });
-                }
-            }
-        }
+        await performInitialSeed();
 
         revalidatePath("/", "layout");
         return { success: true };
