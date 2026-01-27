@@ -64,13 +64,13 @@ export async function performInitialSeed() {
         if (settingsCount === 0) {
             console.log("Seeding default board settings...");
             const defaultBoards = [
-                { category: 'church', name: '교회사' },
+                { category: 'church', name: '교회사', categories: ['한국교회사:church-korea', '세계교회사:church-world'] },
                 { category: 'daily-homily', name: '오늘의 강론' },
                 { category: 'sunday-homily', name: '주일/대축일 강론' },
                 { category: 'feast-homily', name: '축일/기념일 강론' },
                 { category: 'special-homily', name: '특별강론' },
                 { category: 'mamdo-commentary', name: '맘도 성서 해설' },
-                { category: 'bible', name: '성경' },
+                { category: 'bible', name: '성경', categories: ['구약:bible-old', '신약:bible-new'] },
                 { category: 'story-spring', name: '이야기 샘' },
                 { category: 'free-board', name: '자유게시판' },
                 { category: 'gallery', name: '갤러리', mediaEnabled: true },
@@ -81,7 +81,7 @@ export async function performInitialSeed() {
                 await prisma.boardSettings.create({
                     data: {
                         ...board,
-                        categories: [], // Initialize with empty array
+                        categories: board.categories || [],
                     }
                 });
             }

@@ -63,7 +63,7 @@ export function getMappedCategory(category: string, tab?: string, settings?: any
 export function isValidCategoryForRoute(routeCategory: string, postCategory: string, settings?: any): boolean {
     if (routeCategory === postCategory) return true;
 
-    if (settings && settings.categories) {
+    if (settings && settings.categories && settings.categories.length > 0) {
         return settings.categories.some((c: string) => {
             const [, key] = c.split(':');
             return (key || c.split(':')[0]) === postCategory;
