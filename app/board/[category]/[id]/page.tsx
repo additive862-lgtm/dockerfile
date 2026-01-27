@@ -8,6 +8,7 @@ import { ko } from 'date-fns/locale';
 import { User, Calendar, Eye, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { getMappedCategory, isValidCategoryForRoute, getCategoryDisplayName } from '@/lib/board-utils';
+import BoardHeader from '../../../components/board/BoardHeader';
 import { PostActions } from '../../../components/board/PostActions';
 import { PostTopActions } from '../../../components/board/PostTopActions';
 import { auth } from '@/auth';
@@ -36,8 +37,14 @@ export default async function BoardDetailPage({ params }: PageProps) {
     const dbCategoryScope = getMappedCategory(category, 'all', settings);
     const { prev, next } = await getAdjacentPosts(id, dbCategoryScope);
 
+    const title = settings?.name || getCategoryDisplayName(post.category, settings);
+    const description = "유익한 정보와 소식을 나누는 공간입니다.";
+
     return (
         <div className="bg-white min-h-screen">
+            {/* Header */}
+            <BoardHeader title={title} description={description} category={category} />
+
             {/* Header / Navigation */}
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100">
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">

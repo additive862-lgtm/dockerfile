@@ -45,14 +45,14 @@ export default function BoardHeader({ title, description, category }: BoardHeade
     const [bgImage, setBgImage] = useState('');
 
     useEffect(() => {
-        // Only apply image background for specific categories
-        if (category === 'church') {
+        // Only apply image background for specific category groups
+        if (category === 'church' || category.startsWith('church-')) {
             const randomBg = BACKGROUND_IMAGES[Math.floor(Math.random() * BACKGROUND_IMAGES.length)];
             setBgImage(randomBg);
-        } else if (category === 'homily') {
+        } else if (category === 'homily' || category.includes('homily')) {
             const randomBg = HOMILY_IMAGES[Math.floor(Math.random() * HOMILY_IMAGES.length)];
             setBgImage(randomBg);
-        } else if (category === 'mamdo-commentary' || category === 'bible') {
+        } else if (category === 'mamdo-commentary' || category === 'bible' || category.startsWith('bible-')) {
             const randomBg = BIBLE_IMAGES[Math.floor(Math.random() * BIBLE_IMAGES.length)];
             setBgImage(randomBg);
         } else if (category === 'story-spring') {
@@ -71,15 +71,15 @@ export default function BoardHeader({ title, description, category }: BoardHeade
 
     // Corrected text for specific categories as requested
     let displayTitle = title;
-    if (category === 'church') displayTitle = '교회사';
+    if (category === 'church' || category.startsWith('church-')) displayTitle = '교회사';
     else if (category === 'mamdo-commentary') displayTitle = '맘도성경여행';
 
     let displayDescription = description;
-    if (category === 'church') {
+    if (category === 'church' || category.startsWith('church-')) {
         displayDescription = '두돌 신부의 한국교회사, 세계교회사';
-    } else if (category === 'homily') {
+    } else if (category === 'homily' || category.includes('homily')) {
         displayDescription = '두돌 신부님의 오늘의 강론, 주일, 축일, 특별 강론 공간입니다.';
-    } else if (category === 'mamdo-commentary' || category === 'bible') {
+    } else if (category === 'mamdo-commentary' || category === 'bible' || category.startsWith('bible-')) {
         displayDescription = '두돌 신부님의 성경50주(구약,신약), 맘도 성서 해설';
     } else if (category === 'story-spring') {
         displayDescription = '두돌 신부님의 이야기 샘';
@@ -89,7 +89,9 @@ export default function BoardHeader({ title, description, category }: BoardHeade
         displayDescription = '궁금하면 물어보세요';
     }
 
-    const isCustomBg = ['church', 'homily', 'mamdo-commentary', 'bible', 'story-spring', 'free-board', 'gallery', 'qna'].includes(category);
+    const isCustomBg = ['church', 'homily', 'mamdo-commentary', 'bible', 'story-spring', 'free-board', 'gallery', 'qna'].some(group =>
+        category === group || category.includes(group)
+    );
 
     if (isCustomBg) {
         return (

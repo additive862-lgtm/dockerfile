@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { getBoardSettingsByCategory, getBoardPostDetail } from '@/lib/actions/board';
+import BoardHeader from '../../../components/board/BoardHeader';
 
 const BoardWriteForm = dynamic(
     () => import('../../../components/board/BoardWriteForm').then(mod => mod.BoardWriteForm),
@@ -38,12 +39,7 @@ export default async function BoardWritePage({ params, searchParams }: PageProps
 
     return (
         <div className="bg-white min-h-screen">
-            <div className="bg-slate-50 py-16 border-b border-slate-100 mb-12">
-                <div className="max-w-4xl mx-auto px-6">
-                    <h1 className="text-4xl font-extrabold text-[#001f3f] tracking-tight">{title}</h1>
-                    <p className="text-lg text-slate-500 font-medium mt-2">{subTitle}</p>
-                </div>
-            </div>
+            <BoardHeader title={title} description={subTitle} category={category} />
 
             <div className="max-w-4xl mx-auto px-6 pb-24 min-h-[600px]">
                 <BoardWriteForm
