@@ -45,4 +45,16 @@ export const r2 = new S3Client({
 });
 
 export const R2_BUCKET = getEnv('R2_S3_BUCKET') || getEnv('AWS_S3_BUCKET') || getEnv('R2_BUCKET_NAME') || 'r2bucket-dudol';
-export const R2_PUBLIC_DOMAIN = getEnv('R2_PUBLIC_DOMAIN');
+
+// Public Domain Normalization
+let rawPublicDomain = getEnv('R2_PUBLIC_DOMAIN') || getEnv('R2_PUBLIC') || getEnv('NEXT_PUBLIC_R2_URL');
+if (rawPublicDomain) {
+    // Ensure protocol
+    if (!rawPublicDomain.startsWith('http')) {
+        rawPublicDomain = `https://${rawPublicDomain}`;
+    }
+    // Remove trailing slash
+    rawPublicDomain = rawPublicDomain.replace(/\/$/, '');
+}
+
+export const R2_PUBLIC_DOMAIN = rawPublicDomain;
