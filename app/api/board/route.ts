@@ -71,6 +71,9 @@ export async function POST(request: Request) {
         );
     }
 }
+import { r2, R2_BUCKET } from '@/lib/r2';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+
 export async function PUT(request: Request) {
     try {
         const session = await auth();
@@ -83,7 +86,10 @@ export async function PUT(request: Request) {
 
         const existingPost = await prisma.post.findUnique({
             where: { id },
-            select: { authorId: true }
+            select: {
+                authorId: true,
+                attachments: true
+            }
         });
 
         if (!existingPost) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
@@ -91,6 +97,36 @@ export async function PUT(request: Request) {
         // Ownership check
         if (existingPost.authorId !== session.user.id && session.user.role !== 'ADMIN') {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
+        }
+
+        // --- R2 Cleanup Logic ---
+        // Identify attachments being removed
+        const incomingUrls = new Set(attachments?.map(a => a.fileUrl) || []);
+        const toDelete = existingPost.attachments.filter(ext => !incomingUrls.has(ext.fileUrl));
+
+        if (toDelete.length > 0) {
+            for (const attachment of toDelete) {
+                if (attachment.fileUrl) {
+                    let key = attachment.fileUrl;
+                    if (key.startsWith('http')) {
+                        try {
+                            const urlObj = new URL(key);
+                            key = urlObj.pathname.substring(1);
+                        } catch (e) { continue; }
+                    } else if (key.startsWith('/')) {
+                        key = key.substring(1);
+                    }
+
+                    try {
+                        await r2.send(new DeleteObjectCommand({
+                            Bucket: R2_BUCKET,
+                            Key: key,
+                        }));
+                    } catch (r2Error) {
+                        console.error("Cleanup failed for R2 key:", key, r2Error);
+                    }
+                }
+            }
         }
 
         // Update post and sync attachments
@@ -101,8 +137,6 @@ export async function PUT(request: Request) {
                 content,
                 thumbnail: thumbnail || null,
                 category: category || undefined,
-                // Simple sync for attachments: delete existing and create new
-                // For a more robust solution, we could diff them
                 attachments: {
                     deleteMany: {},
                     create: attachments?.map((att: AttachmentInput) => ({

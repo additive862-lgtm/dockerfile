@@ -11,6 +11,7 @@ import { getMappedCategory, isValidCategoryForRoute, getCategoryDisplayName } fr
 import BoardHeader from '../../../components/board/BoardHeader';
 import { PostActions } from '../../../components/board/PostActions';
 import { PostTopActions } from '../../../components/board/PostTopActions';
+import ViewCounter from '../../../components/board/ViewCounter';
 import { auth } from '@/auth';
 
 interface PageProps {
@@ -44,6 +45,9 @@ export default async function BoardDetailPage({ params }: PageProps) {
         <div className="bg-white min-h-screen">
             {/* Header */}
             <BoardHeader title={title} description={description} category={category} />
+
+            {/* Unique View Counter (Hidden) */}
+            <ViewCounter id={post.id} category={category} />
 
             {/* Header / Navigation */}
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100">

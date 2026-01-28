@@ -2,6 +2,9 @@
 
 import { prisma } from '../prisma';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { r2, R2_BUCKET } from '@/lib/r2';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { auth } from '@/auth';
 
 export async function getBoardPosts(category: string | string[], page: number = 1, pageSize: number = 10) {
@@ -37,24 +40,53 @@ export async function getBoardPosts(category: string | string[], page: number = 
 }
 
 export async function getBoardPostDetail(id: number) {
-    // ... (unchanged)
     try {
         const post = await prisma.post.findUnique({
             where: { id },
             include: {
-                comments: {
-                    orderBy: { createdAt: 'asc' }
-                },
+                comments: { orderBy: { createdAt: 'asc' } },
                 attachments: true,
-                _count: {
-                    select: { comments: true }
-                }
-            },
+                _count: { select: { comments: true } }
+            }
         });
         return post;
     } catch (error) {
         console.error('Failed to fetch post detail:', error);
         return null;
+    }
+}
+
+/**
+ * Server Action to increment view count with 24h cooldown
+ */
+export async function incrementViewCount(id: number, routeCategory?: string) {
+    try {
+        const cookieStore = cookies();
+        const cookieName = `viewed_post_${id}`;
+        const hasViewed = cookieStore.get(cookieName);
+
+        if (!hasViewed) {
+            const updatedPost = await prisma.post.update({
+                where: { id },
+                data: { views: { increment: 1 } },
+                select: { category: true }
+            });
+
+            cookieStore.set(cookieName, 'true', {
+                maxAge: 60 * 60 * 24, // 24 hours
+                path: '/',
+                httpOnly: true,
+                sameSite: 'lax'
+            });
+
+            // Revalidate the specific route path to ensure fresh data on next visit/refresh
+            const path = `/board/${routeCategory || updatedPost.category}/${id}`;
+            revalidatePath(path);
+        }
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to increment view count:', error);
+        return { success: false };
     }
 }
 
@@ -140,7 +172,11 @@ export async function deleteBoardPost(id: number) {
 
         const post = await prisma.post.findUnique({
             where: { id },
-            select: { authorId: true, category: true }
+            select: {
+                authorId: true,
+                category: true,
+                attachments: true // Get attachments to delete from R2
+            }
         });
 
         if (!post) {
@@ -155,6 +191,38 @@ export async function deleteBoardPost(id: number) {
             return { success: false, error: '본인의 게시글만 삭제할 수 있습니다.' };
         }
 
+        // 1. Delete associated files from R2 first
+        if (post.attachments && post.attachments.length > 0) {
+            for (const attachment of post.attachments) {
+                if (attachment.fileUrl) {
+                    let key = attachment.fileUrl;
+                    if (key.startsWith('http')) {
+                        try {
+                            const urlObj = new URL(key);
+                            key = urlObj.pathname.substring(1); // remove leading slash
+                        } catch (e) {
+                            console.error("Malformed URL, skipping R2 delete:", key);
+                            continue;
+                        }
+                    } else if (key.startsWith('/')) {
+                        key = key.substring(1);
+                    }
+
+                    try {
+                        await r2.send(new DeleteObjectCommand({
+                            Bucket: R2_BUCKET,
+                            Key: key,
+                        }));
+                        console.log(`Deleted from R2: ${key}`);
+                    } catch (r2Error) {
+                        console.error(`Failed to delete from R2 (${key}):`, r2Error);
+                        // We continue to delete from DB even if R2 fails
+                    }
+                }
+            }
+        }
+
+        // 2. Delete the post from DB (attachments and comments will be cascaded by Prisma)
         await prisma.post.delete({
             where: { id }
         });
