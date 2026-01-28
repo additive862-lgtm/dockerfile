@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Force cache invalidation and clean install
-# Timestamp: 2026-01-25 23:22
+# Timestamp: 2026-01-28 21:00
 RUN rm -rf node_modules package-lock.json && npm install
 
 # Rebuild the source code only when needed
