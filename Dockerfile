@@ -36,6 +36,7 @@ ENV TURNSTILE_SECRET_KEY=$TURNSTILE_SECRET_KEY
 RUN npx prisma generate
 
 # Next.js Build
+RUN echo "Building with Site Key: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:0:5}*****"
 RUN npm run build
 
 # Production image, copy all the files and run next
