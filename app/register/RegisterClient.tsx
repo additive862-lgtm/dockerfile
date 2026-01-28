@@ -218,13 +218,22 @@ export default function RegisterClient({ siteKey }: { siteKey?: string }) {
                         </div>
 
                         {/* Turnstile Widget Container */}
-                        <div className="flex justify-center py-4 min-h-[80px]">
-                            <div ref={turnstileContainerRef} id="turnstile-widget" />
-                            <input type="hidden" name="turnstileToken" value={turnstileToken} />
+                        <div className="flex flex-col items-center justify-center py-4 min-h-[100px] border rounded-lg bg-slate-50/50">
+                            {siteKey ? (
+                                <>
+                                    <div ref={turnstileContainerRef} id="turnstile-widget" />
+                                    <input type="hidden" name="turnstileToken" value={turnstileToken} />
+                                </>
+                            ) : (
+                                <div className="text-center p-2">
+                                    <p className="text-sm text-red-500 font-bold">⚠️ 스팸 방지 설정 오류</p>
+                                    <p className="text-xs text-slate-500 mt-1">관리자에게 문의하거나 환경변수 설정을 확인해주세요.</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Fallback msg if js not loaded */}
-                        {!turnstileToken && (
+                        {siteKey && !turnstileToken && (
                             <p className="text-xs text-center text-slate-400">
                                 스팸 방지 확인이 완료되면 버튼이 활성화됩니다.
                             </p>

@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Force cache invalidation and clean install
-# Timestamp: 2026-01-28 21:00
+# Timestamp: 2026-01-28 23:10
 RUN rm -rf node_modules package-lock.json && npm install
 
 # Rebuild the source code only when needed
@@ -81,8 +81,8 @@ RUN npm install prisma@6.19.1
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
-# Ensure the nextjs user owns the app directory
-RUN chown -R nextjs:nodejs /app
+# Ensure the nextjs user owns the app directory and has write permissions
+RUN chown -R nextjs:nodejs /app && chmod -R 755 /app
 
 # Switch to nextjs user at the very end
 USER nextjs
