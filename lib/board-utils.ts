@@ -38,14 +38,19 @@ export function getMappedCategory(category: string, tab?: string, settings?: any
             return { name, key: key || name };
         });
 
-        // If tab is 'all' or undefined, return all keys
+        // If tab is 'all' or undefined, return all keys + the source category for backward compatibility
         if (!tab || tab === 'all') {
-            return subCategories.map((sc: any) => sc.key);
+            const keys = subCategories.map((sc: any) => sc.key);
+            // Include original slug to prevent older posts from disappearing
+            if (!keys.includes(category)) {
+                keys.push(category);
+            }
+            return keys;
         }
 
         // Return specific key
         const found = subCategories.find((sc: any) => sc.key === tab);
-        return found ? found.key : subCategories.map((sc: any) => sc.key);
+        return found ? found.key : [category, ...subCategories.map((sc: any) => sc.key)];
     }
 
     // Fallback to hardcoded mapping

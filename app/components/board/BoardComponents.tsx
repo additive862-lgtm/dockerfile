@@ -159,7 +159,7 @@ export function AttachmentList({ attachments }: { attachments: Attachment[] }) {
                             {att.fileType === 'LINK' && <LinkIcon size={20} />}
                         </div>
                         <a
-                            href={att.fileUrl}
+                            href={att.fileType === 'LINK' ? att.fileUrl : `/api/download/${att.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 text-sm font-medium text-slate-700 truncate hover:text-blue-600"

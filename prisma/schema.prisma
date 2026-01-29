@@ -70,14 +70,18 @@ model Post {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   String
   author    String
   authorId  String?
-  createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  isDeleted Boolean   @default(false)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
-  user      User?    @relation(fields: [authorId], references: [id])
+  user      User?     @relation(fields: [authorId], references: [id])
+  parentId  Int?
+  parent    Comment?  @relation("ReplyTo", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("ReplyTo")
 }
 
 model Attachment {

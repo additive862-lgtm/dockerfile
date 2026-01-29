@@ -129,14 +129,15 @@ export async function getAdjacentPosts(currentId: number, category: string | str
     }
 }
 
-export async function createComment(postId: number, author: string, content: string, authorId?: string) {
+export async function createComment(postId: number, author: string, content: string, authorId?: string, parentId?: number) {
     try {
         const comment = await prisma.comment.create({
             data: {
                 postId,
                 author,
                 content,
-                authorId, // Link to user if logged in
+                authorId,
+                parentId,
             },
             include: {
                 post: {
@@ -149,6 +150,80 @@ export async function createComment(postId: number, author: string, content: str
     } catch (error) {
         console.error('Failed to create comment:', error);
         return { success: false, error: '댓글 등록 중 오류가 발생했습니다.' };
+    }
+}
+
+export async function deleteComment(id: number) {
+    try {
+        const session = await auth();
+        if (!session) return { success: false, error: '권한이 없습니다.' };
+
+        const comment = await prisma.comment.findUnique({
+            where: { id },
+            include: { replies: { where: { isDeleted: false } } }
+        });
+
+        if (!comment) return { success: false, error: '댓글을 찾을 수 없습니다.' };
+
+        // Ownership check
+        if (comment.authorId !== session.user.id && session.user.role !== 'ADMIN') {
+            return { success: false, error: '본인의 댓글만 삭제할 수 있습니다.' };
+        }
+
+        // Fetch post info for revalidation
+        const post = await prisma.post.findUnique({
+            where: { id: comment.postId },
+            select: { category: true }
+        });
+
+        // If it has active replies, soft delete
+        if (comment.replies.length > 0) {
+            await prisma.comment.update({
+                where: { id },
+                data: { isDeleted: true }
+            });
+        } else {
+            // Hard delete
+            await prisma.comment.delete({
+                where: { id }
+            });
+        }
+
+        if (post) revalidatePath(`/board/${post.category}/${comment.postId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete comment:', error);
+        return { success: false, error: '댓글 삭제 중 오류가 발생했습니다.' };
+    }
+}
+
+export async function updateComment(id: number, content: string) {
+    try {
+        const session = await auth();
+        if (!session) return { success: false, error: '권한이 없습니다.' };
+
+        const comment = await prisma.comment.findUnique({
+            where: { id }
+        });
+
+        if (!comment) return { success: false, error: '댓글을 찾을 수 없습니다.' };
+        if (comment.authorId !== session.user.id && session.user.role !== 'ADMIN') {
+            return { success: false, error: '본인의 댓글만 수정할 수 있습니다.' };
+        }
+
+        const updated = await prisma.comment.update({
+            where: { id },
+            data: { content },
+            include: {
+                post: { select: { category: true } }
+            }
+        });
+
+        revalidatePath(`/board/${updated.post.category}/${updated.postId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to update comment:', error);
+        return { success: false, error: '댓글 수정 중 오류가 발생했습니다.' };
     }
 }
 
