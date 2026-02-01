@@ -119,64 +119,119 @@ export function BoardManager({ initialSettings, initialBoards }: { initialSettin
                 </Button>
             </div>
             <Card>
-                <CardHeader>
+                <CardHeader className="pb-4">
                     <CardTitle>등록된 게시판 목록</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>게시판명</TableHead>
-                                <TableHead>식별자(Category)</TableHead>
-                                <TableHead>주요 기능</TableHead>
-                                <TableHead>권한 (쓰기/댓글)</TableHead>
-                                <TableHead className="text-right">관리</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {settingsList.map((board) => (
-                                <TableRow key={board.category}>
-                                    <TableCell className="font-bold text-lg">{board.name}</TableCell>
-                                    <TableCell className="font-mono text-xs text-muted-foreground">{board.category}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            {board.commentEnabled && <span title="댓글 활성"><MessageSquare className="h-4 w-4 text-blue-500" /></span>}
-                                            {board.secretPostEnabled && <span title="비밀글 지원"><Shield className="h-4 w-4 text-amber-500" /></span>}
-                                            {board.turnstileEnabled && <span title="Turnstile 활성"><Info className="h-4 w-4 text-green-500" /></span>}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="text-xs space-y-1">
-                                            <div>쓰기: <span className="font-semibold">{board.writePermission}</span></div>
-                                            <div>댓글: <span className="font-semibold">{board.commentPermission}</span></div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="gap-2"
-                                                onClick={() => setEditingBoard(board)}
-                                            >
-                                                <Settings2 className="h-4 w-4" />
-                                                설정
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="gap-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-rose-100"
-                                                onClick={() => setDeletingBoard(board)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                                삭제
-                                            </Button>
-                                        </div>
-                                    </TableCell>
+                    {/* Desktop Table - Hidden on mobile */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>게시판명</TableHead>
+                                    <TableHead>식별자(Category)</TableHead>
+                                    <TableHead>주요 기능</TableHead>
+                                    <TableHead>권한 (쓰기/댓글)</TableHead>
+                                    <TableHead className="text-right">관리</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {settingsList.map((board) => (
+                                    <TableRow key={board.category}>
+                                        <TableCell className="font-bold text-lg">{board.name}</TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground">{board.category}</TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-2">
+                                                {board.commentEnabled && <span title="댓글 활성"><MessageSquare className="h-4 w-4 text-blue-500" /></span>}
+                                                {board.secretPostEnabled && <span title="비밀글 지원"><Shield className="h-4 w-4 text-amber-500" /></span>}
+                                                {board.turnstileEnabled && <span title="Turnstile 활성"><Info className="h-4 w-4 text-green-500" /></span>}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-xs space-y-1">
+                                                <div>쓰기: <span className="font-semibold">{board.writePermission}</span></div>
+                                                <div>댓글: <span className="font-semibold">{board.commentPermission}</span></div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2"
+                                                    onClick={() => setEditingBoard(board)}
+                                                >
+                                                    <Settings2 className="h-4 w-4" />
+                                                    설정
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 border-rose-100"
+                                                    onClick={() => setDeletingBoard(board)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    삭제
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile Card List - Visible on mobile */}
+                    <div className="md:hidden divide-y divide-slate-100">
+                        {settingsList.map((board) => (
+                            <div key={board.category} className="p-5 space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h4 className="font-bold text-xl text-slate-900 leading-tight">
+                                            {board.name}
+                                        </h4>
+                                        <div className="font-mono text-[11px] text-slate-400 mt-1">
+                                            {board.category}
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        {board.commentEnabled && <div className="p-1.5 bg-blue-50 rounded-md"><MessageSquare className="h-3.5 w-3.5 text-blue-500" /></div>}
+                                        {board.secretPostEnabled && <div className="p-1.5 bg-amber-50 rounded-md"><Shield className="h-3.5 w-3.5 text-amber-500" /></div>}
+                                        {board.turnstileEnabled && <div className="p-1.5 bg-green-50 rounded-md"><Info className="h-3.5 w-3.5 text-green-500" /></div>}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="space-y-1">
+                                        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">쓰기 권한</div>
+                                        <div className="text-sm font-semibold text-slate-700">{board.writePermission}</div>
+                                    </div>
+                                    <div className="space-y-1 border-l border-slate-200 pl-3">
+                                        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">댓글 권한</div>
+                                        <div className="text-sm font-semibold text-slate-700">{board.commentPermission}</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 pt-1">
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 gap-2 h-11 rounded-xl border-slate-200"
+                                        onClick={() => setEditingBoard(board)}
+                                    >
+                                        <Settings2 className="h-4 w-4" />
+                                        설정
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="gap-2 h-11 w-11 rounded-xl text-rose-500 border-rose-100 hover:bg-rose-50"
+                                        onClick={() => setDeletingBoard(board)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
 

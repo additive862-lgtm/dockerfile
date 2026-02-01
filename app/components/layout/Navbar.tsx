@@ -116,6 +116,8 @@ export default function Navbar({ initialMenus }: { initialMenus?: any[] }) {
         exit: { x: '100%', opacity: 0 }
     };
 
+    if (pathname?.startsWith('/admin')) return null;
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
             <div className="max-w-6xl mx-auto px-6">

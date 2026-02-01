@@ -55,7 +55,7 @@ export function BoardList({
         case 'LIST':
         default:
             return (
-                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                <div className="bg-white border-y md:border border-slate-100 md:rounded-3xl overflow-hidden shadow-sm md:shadow-md transition-all">
                     <BoardTable
                         posts={posts}
                         totalCount={totalCount}

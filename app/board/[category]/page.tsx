@@ -93,7 +93,7 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
                     settings={settings}
                 />
 
-                <div className="relative mt-8 min-h-[50px]">
+                <div className="relative mt-12">
                     <div className="flex justify-center">
                         <Pagination
                             totalCount={totalCount}
@@ -101,12 +101,12 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
                             pageSize={pageSize}
                         />
                     </div>
-                    {/* Floating Write Button positioned at the bottom-right */}
+                    {/* Write Button: Centered below on mobile, Absolute right on desktop */}
                     {canWrite && (
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                        <div className="mt-8 md:mt-0 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 flex justify-center">
                             <Link
                                 href={`/board/${category}/write?tab=${tab || ''}`}
-                                className="flex items-center gap-2 px-6 py-3 bg-[#001f3f] text-white rounded-xl hover:bg-blue-900 transition-all font-bold shadow-lg shadow-slate-200"
+                                className="flex items-center gap-2 px-8 py-3.5 bg-[#001f3f] text-white rounded-2xl hover:bg-blue-900 transition-all font-bold shadow-xl shadow-blue-100/50"
                             >
                                 <PenSquare size={20} />
                                 <span>글쓰기</span>

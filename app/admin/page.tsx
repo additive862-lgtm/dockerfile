@@ -29,8 +29,8 @@ export default async function AdminDashboardPage() {
     ];
 
     return (
-        <div className="space-y-8">
-            <h2 className="text-3xl font-bold tracking-tight">대시보드 홈</h2>
+        <div className="space-y-6 md:space-y-8">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">대시보드 홈</h2>
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -52,36 +52,58 @@ export default async function AdminDashboardPage() {
                 <CardHeader>
                     <CardTitle>최근 가입한 회원</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>이름/닉네임</TableHead>
-                                <TableHead>이메일</TableHead>
-                                <TableHead>권한</TableHead>
-                                <TableHead className="text-right">가입일</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {recentUsers.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell className="font-medium">
-                                        {user.name} ({user.nickname || "N/A"})
-                                    </TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${user.role === "ADMIN" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
-                                            }`}>
-                                            {user.role}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {new Date(user.createdAt).toLocaleDateString()}
-                                    </TableCell>
+                <CardContent className="p-0 md:p-6">
+                    {/* Desktop Table - Hidden on mobile */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>이름/닉네임</TableHead>
+                                    <TableHead>이메일</TableHead>
+                                    <TableHead>권한</TableHead>
+                                    <TableHead className="text-right">가입일</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {recentUsers.map((user) => (
+                                    <TableRow key={user.id}>
+                                        <TableCell className="font-medium">
+                                            {user.name} ({user.nickname || "N/A"})
+                                        </TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${user.role === "ADMIN" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
+                                                }`}>
+                                                {user.role}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {new Date(user.createdAt).toLocaleDateString()}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile Card List - Visible on mobile */}
+                    <div className="md:hidden divide-y divide-slate-100">
+                        {recentUsers.map((user) => (
+                            <div key={user.id} className="p-4 space-y-2">
+                                <div className="flex justify-between items-start">
+                                    <div className="font-bold text-slate-900">
+                                        {user.name} <span className="text-slate-400 text-xs font-normal">({user.nickname || "N/A"})</span>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${user.role === "ADMIN" ? "bg-red-100 text-red-700" : "bg-blue-50 text-blue-600"
+                                        }`}>
+                                        {user.role}
+                                    </span>
+                                </div>
+                                <div className="text-sm text-slate-500 truncate">{user.email}</div>
+                                <div className="text-[11px] text-slate-400">가입일: {new Date(user.createdAt).toLocaleDateString()}</div>
+                            </div>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
 

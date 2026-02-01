@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { updateProfile, deleteAccount } from "@/app/actions/auth";
 import { Button } from "@/app/components/ui/button";
@@ -44,7 +44,7 @@ export default function ProfileForm({ initialUser }: { initialUser: Session["use
             const result = await deleteAccount();
             if (result.success) {
                 alert("그동안 이용해 주셔서 감사합니다.");
-                window.location.href = "/";
+                signOut({ callbackUrl: "/" });
             } else {
                 alert(result.error);
             }
