@@ -3,6 +3,8 @@ import { getHomeData, getGalleryFeed } from '@/app/actions/home';
 import LatestPostsGrid from './components/home/LatestPostsGrid';
 import CinematicGallery from './components/home/CinematicGallery';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const [boardData, galleryData] = await Promise.all([
     getHomeData(),

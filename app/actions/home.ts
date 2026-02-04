@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { getMappedCategory } from '@/lib/board-utils';
 
 export async function getHomeData() {
     try {
@@ -12,12 +13,15 @@ export async function getHomeData() {
             take: 3
         });
 
-        // 2. For each board, fetch latest 5 posts
+        // 2. For each board, fetch latest posts (including sub-categories)
         const boardsWithPosts = await Promise.all(
             boards.map(async (board) => {
+                const mappedCategories = getMappedCategory(board.category, 'all', board);
                 const posts = await prisma.post.findMany({
                     where: {
-                        category: board.category
+                        category: Array.isArray(mappedCategories)
+                            ? { in: mappedCategories }
+                            : mappedCategories
                     },
                     take: 3,
                     orderBy: {

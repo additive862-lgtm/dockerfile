@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { revalidatePath } from 'next/cache';
 
 interface AttachmentInput {
     fileUrl: string;
@@ -57,6 +58,8 @@ export async function POST(request: Request) {
                 attachments: true,
             },
         });
+
+        revalidatePath('/');
 
         return NextResponse.json({
             message: 'Post created successfully',
@@ -148,6 +151,8 @@ export async function PUT(request: Request) {
                 },
             },
         });
+
+        revalidatePath('/');
 
         return NextResponse.json({
             message: 'Post updated successfully',

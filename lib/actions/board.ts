@@ -304,6 +304,7 @@ export async function deleteBoardPost(id: number) {
 
         revalidatePath(`/board/${post.category}`);
         revalidatePath(`/board/${post.category}/${id}`);
+        revalidatePath('/');
 
         return { success: true };
     } catch (error) {
